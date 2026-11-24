@@ -1,0 +1,14 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+
+# DONNÉES PERSONNELLES & SECRETS (NE JAMAIS COMMITTER !)
+credentials.json
+credentials.backup.json
+gemini_config.json
+pronote_data.json
+Mon_Pronote_Temps_Reel.md
+drive_sync.json
+coach_tasks.json
+.env

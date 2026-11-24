@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pronote Coach" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <title>Pronote Coach — Ilyan</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --critical: #ef4444;
+      --high: #f59e0b;
+      --ok: #10b981;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+      padding-bottom: 86px;
+    }
+    .container { max-width: 1440px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);
+      padding: 16px 20px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .title-group h1 { font-size: 1.25rem; font-weight: 700; }
+    .title-group p { color: var(--muted); font-size: 0.84rem; margin-top: 2px; }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 9px 15px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-sm { padding: 6px 11px; font-size: 0.78rem; border-radius: 8px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.95fr 1.1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 9px;
+    }
+    .task-item {
+      display: flex;
+      gap: 11px;
+      padding: 11px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid var(--border);
+      margin-bottom: 9px;
+    }
+    .task-item.done { opacity: 0.45; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-checkbox {
+      width: 20px;
+      height: 20px;
+      margin-top: 3px;
+      cursor: pointer;
+      accent-color: var(--ok);
+      flex-shrink: 0;
+    }
+    .task-body { flex: 1; }
+    .task-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .badge.critical { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
+    .badge.high { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid #f59e0b; }
+    .badge.normal, .badge.medium { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid #6366f1; }
+    .badge.ok { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+    .task-title { font-weight: 600; font-size: 0.93rem; margin-bottom: 3px; }
+    .task-desc { color: var(--muted); font-size: 0.83rem; white-space: pre-line; }
+
+    .lesson-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.45);
+      margin-bottom: 8px;
+      border-left: 4px solid var(--accent);
+      font-size: 0.86rem;
+    }
+    .lesson-item.canceled { border-left-color: var(--critical); opacity: 0.72; }
+    .lesson-item.test { border-left-color: var(--high); background: rgba(245, 158, 11, 0.12); }
+
+    .avg-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+      font-size: 0.88rem;
+    }
+    .avg-score { font-weight: 700; font-size: 0.98rem; }
+
+    /* Chat Panel */
+    .chat-card {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 130px);
+      min-height: 520px;
+      position: sticky;
+      top: 16px;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .msg {
+      padding: 11px 13px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      max-width: 92%;
+    }
+    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.bot { background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+    .chip {
+      background: rgba(99, 102, 241, 0.16);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      cursor: pointer;
+    }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 11px 13px;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    .key-box {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+    }
+    .key-box input {
+      width: 100%;
+      margin: 6px 0;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    /* Mobile Bottom Tab Bar */
+    .mobile-nav { display: none; }
+    @media (max-width: 1024px) {
+      body { padding: 10px; padding-bottom: 78px; }
+      .layout { display: block; }
+      .tab-section { display: none; }
+      .tab-section.active { display: block; }
+      .chat-card { position: static; height: calc(100dvh - 175px); min-height: 400px; }
+      .mobile-nav {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(15, 23, 42, 0.96);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border);
+        padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+        z-index: 99;
+      }
+      .nav-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 4px;
+      }
+      .nav-btn.active { color: #818cf8; }
+      .nav-icon { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1 id="student-name">🎓 Pronote Coach — Ilyan</h1>
+        <p id="sync-status">Chargement...</p>
+      </div>
+      <button class="btn" onclick="syncPronote()" id="sync-btn">🔄 Synchro</button>
+    </header>
+
+    <div class="layout">
+      <!-- Tab: To-Do & Devoirs -->
+      <div id="sec-todo" class="tab-section">
+        <div class="card">
+          <h2>
+            <span>📋 Plan du Coach</span>
+            <span id="coach-progress" style="font-size:0.82rem;color:var(--muted)"></span>
+          </h2>
+          <div id="coach-list"></div>
+        </div>
+        <div class="card">
+          <h2>📚 Devoirs & Contrôles</h2>
+          <div id="hw-list"></div>
+        </div>
+      </div>
+
+      <!-- Tab: EDT & Notes -->
+      <div id="sec-edt" class="tab-section">
+        <div class="card">
+          <h2>🗓️ Emploi du Temps</h2>
+          <div id="lessons-list"></div>
+        </div>
+      </div>
+
+      <div id="sec-notes" class="tab-section" style="display:none;">
+        <div class="card">
+          <h2>📊 Moyennes (Trimestre 1)</h2>
+          <div id="averages-list-mobile"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Live Gemini Coach Chat (default active on mobile!) -->
+      <div id="sec-chat" class="tab-section active">
+        <div class="card chat-card">
+          <h2>
+            <span>✨ Ton Coach Gemini</span>
+            <button class="btn btn-sm" style="background:#334155" onclick="resetChat()">Nouveau</button>
+          </h2>
+
+          <div id="key-setup" class="key-box" style="display:none;">
+            <strong>🔑 Active ton Chat Gemini gratuit</strong><br />
+            Crée une clé sur <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fcd34d">Google AI Studio</a> et colle-la ici :
+            <input type="password" id="api-key-input" placeholder="AIza..." />
+            <button class="btn btn-sm" onclick="saveApiKey()">Activer le chat</button>
+          </div>
+
+          <div class="chat-messages" id="chat-messages">
+            <div class="msg bot">Salut Ilyan ! 👋 Je suis ton prof particulier connecté à ton Pronote. Qu'est-ce qu'on bosse ensemble maintenant ?</div>
+          </div>
+
+          <div class="quick-chips">
+            <button class="chip" onclick="quickAsk('Que dois-je faire en priorité aujourd\\'hui et demain ?')">🎯 Priorités</button>
+            <button class="chip" onclick="quickAsk('Aide-moi sur l\\'exercice 30 page 212 de Maths')">📐 Exo Maths</button>
+            <button class="chip" onclick="quickAsk('Fais-moi un quiz rapide sur l\\'Organisation des pouvoirs en EMC')">⚖️ Quiz EMC</button>
+            <button class="chip" onclick="quickAsk('Fais-moi un plan pour remonter en Physique-Chimie et Maths')">📈 Remontada</button>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Parle à ton Coach..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+
+        <div class="card" id="desktop-averages-card">
+          <h2>📊 Moyennes (Trimestre 1)</h2>
+          <div id="averages-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-nav">
+    <button class="nav-btn active" onclick="switchTab('chat', this)"><span class="nav-icon">💬</span>Coach</button>
+    <button class="nav-btn" onclick="switchTab('todo', this)"><span class="nav-icon">✅</span>To-Do</button>
+    <button class="nav-btn" onclick="switchTab('edt', this)"><span class="nav-icon">🗓️</span>EDT</button>
+    <button class="nav-btn" onclick="switchTab('notes', this)"><span class="nav-icon">📊</span>Notes</button>
+  </nav>
+
+  <script>
+    let currentInteractionId = null;
+
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-section').forEach(el => {
+        el.classList.remove('active');
+        if (window.innerWidth <= 1024) el.style.display = 'none';
+      });
+      const target = document.getElementById('sec-' + name);
+      target.classList.add('active');
+      if (window.innerWidth <= 1024) target.style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function applyResponsive() {
+      const mobile = window.innerWidth <= 1024;
+      const deskAvg = document.getElementById('desktop-averages-card');
+      const secNotes = document.getElementById('sec-notes');
+      if (!mobile) {
+        document.querySelectorAll('.tab-section').forEach(el => el.style.display = '');
+        secNotes.style.display = 'none';
+        deskAvg.style.display = 'block';
+      } else {
+        deskAvg.style.display = 'none';
+        document.querySelectorAll('.tab-section').forEach(el => {
+          el.style.display = el.classList.contains('active') ? 'block' : 'none';
+        });
+      }
+    }
+    window.addEventListener('resize', applyResponsive);
+
+    async function loadData() {
+      const res = await fetch('/api/data');
+      const data = await res.json();
+      renderAll(data);
+      applyResponsive();
+    }
+
+    async function syncPronote() {
+      const btn = document.getElementById('sync-btn');
+      btn.textContent = '⏳...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/sync', { method: 'POST' });
+        const json = await res.json();
+        if (json.ok) renderAll(json.data);
+        else alert('Erreur: ' + json.error);
+      } finally {
+        btn.textContent = '🔄 Synchro';
+        btn.disabled = false;
+      }
+    }
+
+    async function saveApiKey() {
+      const key = document.getElementById('api-key-input').value.trim();
+      if (!key) return;
+      const res = await fetch('/api/save_key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: key })
+      });
+      const json = await res.json();
+      if (json.ok && json.has_gemini_key) {
+        document.getElementById('key-setup').style.display = 'none';
+        appendMsg('bot', '✅ Clé Gemini activée ! Tu peux maintenant discuter avec moi.');
+      }
+    }
+
+    function appendMsg(role, text) {
+      const box = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'msg ' + role;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function resetChat() {
+      currentInteractionId = null;
+      document.getElementById('chat-messages').innerHTML =
+        '<div class="msg bot">Nouvelle discussion prête ! De quoi as-tu besoin ?</div>';
+    }
+
+    function quickAsk(text) {
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      appendMsg('user', text);
+      const loading = appendMsg('bot', '⏳ Je réfléchis...');
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, previous_interaction_id: currentInteractionId })
+        });
+        const json = await res.json();
+        if (json.ok) {
+          loading.textContent = json.reply;
+          currentInteractionId = json.interaction_id;
+        } else {
+          loading.textContent = '⚠️ ' + json.error;
+        }
+      } catch (e) {
+        loading.textContent = '⚠️ Erreur réseau : ' + e.message;
+      }
+    }
+
+    async function toggleCoach(id) {
+      await fetch('/api/toggle_coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      loadData();
+    }
+
+    async function toggleHw(id) {
+      await fetch('/api/toggle_hw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      loadData();
+    }
+
+    function renderAll(data) {
+      document.getElementById('student-name').textContent = `🎓 ${data.student.name} (${data.student.class_name})`;
+      document.getElementById('sync-status').textContent = `Synchro : ${data.student.synced_at.replace('T', ' ')}`;
+      document.getElementById('key-setup').style.display = data.has_gemini_key ? 'none' : 'block';
+
+      const tasks = data.coach_tasks || [];
+      const doneCount = tasks.filter(t => t.done).length;
+      document.getElementById('coach-progress').textContent = `${doneCount}/${tasks.length}`;
+
+      document.getElementById('coach-list').innerHTML = tasks.map(t => `
+        <div class="task-item ${t.done ? 'done' : ''}">
+          <input type="checkbox" class="task-checkbox" ${t.done ? 'checked' : ''} onchange="toggleCoach('${t.id}')" />
+          <div class="task-body">
+            <div class="task-meta">
+              <span class="badge ${t.priority}">${t.day}</span>
+              <span class="badge normal">${t.subject}</span>
+              <span class="badge ok">⏱️ ${t.duration}</span>
+            </div>
+            <div class="task-title">${t.title}</div>
+            <div class="task-desc">${t.details}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('hw-list').innerHTML = (data.homework || []).map(h => `
+        <div class="task-item ${h.done ? 'done' : ''}">
+          <input type="checkbox" class="task-checkbox" ${h.done ? 'checked' : ''} onchange="toggleHw('${h.id}')" />
+          <div class="task-body">
+            <div class="task-meta">
+              <span class="badge ${h.priority.level}">Pour le ${h.date}</span>
+              <span class="badge normal">${h.subject}</span>
+              ${h.type === 'controle' ? '<span class="badge critical">🚨 CONTRÔLE</span>' : ''}
+            </div>
+            <div class="task-desc">${h.description}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('lessons-list').innerHTML = (data.lessons || []).map(l => {
+        const dt = l.start.slice(0, 10);
+        const startH = l.start.slice(11, 16);
+        const endH = l.end.slice(11, 16);
+        const cls = l.canceled ? 'canceled' : (l.test || l.status === 'CCF' ? 'test' : '');
+        return `
+          <div class="lesson-item ${cls}">
+            <div>
+              <strong>${dt} • ${startH}-${endH}</strong> — ${l.subject}
+              <div style="font-size:0.78rem;color:var(--muted)">${l.teacher} ${l.classroom ? '• Salle ' + l.classroom : ''}</div>
+            </div>
+            <div>
+              ${l.canceled ? '<span class="badge critical">❌ ANNULÉ</span>' : ''}
+              ${l.test ? '<span class="badge high">🚨 ÉVALUATION</span>' : ''}
+              ${l.status && !l.canceled ? `<span class="badge high">${l.status}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const avgHtml = Object.entries(data.averages || {}).map(([subj, val]) => {
+        const num = parseFloat(val.student.replace(',', '.'));
+        const color = num >= 14 ? '#10b981' : (num >= 11 ? '#f59e0b' : '#ef4444');
+        const advice = num < 10.5 ? '⚠️ Priorité' : (num >= 14 ? '🔥 Point fort' : '👍 Correct');
+        return `
+          <div class="avg-row">
+            <div>
+              <strong>${subj}</strong>
+              <div style="font-size:0.76rem;color:var(--muted)">Classe : ${val.class_average}/20 • ${advice}</div>
+            </div>
+            <div class="avg-score" style="color:${color}">${val.student} / 20</div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('averages-list').innerHTML = avgHtml;
+      document.getElementById('averages-list-mobile').innerHTML = avgHtml;
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Pronote Coach - Ilyan",
+  "short_name": "Pronote Coach",
+  "description": "Ton prof particulier Gemini connecté à ton Pronote (Devoirs, Contrôles, Notes, EDT).",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
