@@ -1,0 +1,16 @@
+{
+  "name": "pronote-coach",
+  "version": "2.0.0",
+  "description": "Pronote Coach IA - Web App (PWA) & Native Android App (Capacitor)",
+  "private": true,
+  "scripts": {
+    "cap:sync": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.1.0",
+    "@capacitor/core": "^7.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.1.0"
+  }
+}

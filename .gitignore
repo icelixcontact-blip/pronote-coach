@@ -1,9 +1,13 @@
-# Environnement Python
+# Python & Node
 .venv/
 __pycache__/
 *.pyc
+node_modules/
+android/
+ios/
 
-# DONNÉES PERSONNELLES & SECRETS (NE JAMAIS COMMITTER !)
+# DONNÉES PERSONNELLES, SESSIONS & SECRETS (NE JAMAIS COMMITTER !)
+data/
 credentials.json
 credentials.backup.json
 gemini_config.json

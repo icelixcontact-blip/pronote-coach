@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pronote Coach" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <title>Pronote Coach IA</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #162033;
+      --card2: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --critical: #ef4444;
+      --high: #f59e0b;
+      --ok: #10b981;
+      --border: #283548;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100dvh;
+    }
+    .btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.94rem;
+      transition: transform 0.12s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-ghost {
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-danger { background: rgba(239, 68, 68, 0.18); border: 1px solid #ef4444; color: #fca5a5; }
+    .btn-sm { padding: 7px 12px; font-size: 0.82rem; border-radius: 9px; }
+
+    /* ---------- LOGIN SCREEN ---------- */
+    #login-screen {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .hero {
+      text-align: center;
+      padding: 24px 16px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.12));
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 22px;
+    }
+    .hero .emoji { font-size: 3rem; margin-bottom: 8px; }
+    .hero h1 { font-size: 1.55rem; font-weight: 800; }
+    .hero p { color: var(--muted); font-size: 0.92rem; margin-top: 6px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .field-label { font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; display: block; }
+    .input {
+      width: 100%;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .input:focus { outline: none; border-color: var(--accent); }
+    .login-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .login-tab {
+      padding: 10px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: #0b1120;
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.86rem;
+    }
+    .login-tab.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--accent);
+      color: white;
+    }
+    #qr-reader {
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      background: #000;
+    }
+    .status-msg {
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 0.86rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .status-msg.err { display: block; background: rgba(239, 68, 68, 0.16); border: 1px solid #ef4444; color: #fca5a5; }
+    .status-msg.ok { display: block; background: rgba(16, 185, 129, 0.16); border: 1px solid #10b981; color: #6ee7b7; }
+
+    /* ---------- MAIN APP SCREEN ---------- */
+    #app-screen { display: none; padding: 14px; padding-bottom: 84px; max-width: 1440px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #1e1b4b, #162033);
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+    .hdr-title h1 { font-size: 1.15rem; font-weight: 700; }
+    .hdr-title p { color: var(--muted); font-size: 0.8rem; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.95fr 1.1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .card h2 {
+      font-size: 1.02rem;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 9px;
+    }
+    .task-item {
+      display: flex;
+      gap: 11px;
+      padding: 11px;
+      border-radius: 12px;
+      background: rgba(11, 17, 32, 0.6);
+      border: 1px solid var(--border);
+      margin-bottom: 9px;
+    }
+    .task-item.done { opacity: 0.45; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-checkbox { width: 20px; height: 20px; margin-top: 3px; cursor: pointer; accent-color: var(--ok); flex-shrink: 0; }
+    .task-body { flex: 1; }
+    .task-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
+    .badge { font-size: 0.69rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; }
+    .badge.critical { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
+    .badge.high { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid #f59e0b; }
+    .badge.normal, .badge.medium { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid #6366f1; }
+    .badge.ok { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+    .task-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; }
+    .task-desc { color: var(--muted); font-size: 0.82rem; white-space: pre-line; }
+
+    .lesson-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(11, 17, 32, 0.55);
+      margin-bottom: 8px;
+      border-left: 4px solid var(--accent);
+      font-size: 0.85rem;
+    }
+    .lesson-item.canceled { border-left-color: var(--critical); opacity: 0.7; }
+    .lesson-item.test { border-left-color: var(--high); background: rgba(245, 158, 11, 0.12); }
+
+    .avg-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      font-size: 0.88rem;
+    }
+    .avg-score { font-weight: 700; font-size: 0.98rem; }
+
+    /* Chat */
+    .chat-card { display: flex; flex-direction: column; height: calc(100vh - 125px); min-height: 480px; position: sticky; top: 14px; }
+    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding-right: 4px; }
+    .msg { padding: 11px 13px; border-radius: 14px; font-size: 0.9rem; white-space: pre-wrap; max-width: 92%; }
+    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.bot { background: rgba(11, 17, 32, 0.85); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+    .chip { background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.4); color: #c7d2fe; padding: 5px 10px; border-radius: 999px; font-size: 0.76rem; cursor: pointer; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; background: #0b1120; border: 1px solid var(--border); color: white; padding: 11px 13px; border-radius: 12px; font-size: 16px; }
+
+    /* Bottom Mobile Nav */
+    .mobile-nav { display: none; }
+    @media (max-width: 1024px) {
+      #app-screen { padding: 10px; padding-bottom: 82px; }
+      .layout { display: block; }
+      .tab-section { display: none; }
+      .tab-section.active { display: block; }
+      .chat-card { position: static; height: calc(100dvh - 175px); min-height: 380px; }
+      .mobile-nav {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(11, 17, 32, 0.97);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border);
+        padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+        z-index: 100;
+      }
+      .nav-btn {
+        background: none; border: none; color: var(--muted);
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        font-size: 0.68rem; font-weight: 600; cursor: pointer; padding: 3px;
+      }
+      .nav-btn.active { color: #818cf8; }
+      .nav-icon { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div id="login-screen">
+    <div class="hero">
+      <div class="emoji">🎓</div>
+      <h1>Pronote Coach IA</h1>
+      <p>Connecte ton compte Pronote en 15 secondes pour obtenir ta To-Do list intelligente, tes alertes contrôles et ton prof particulier IA.</p>
+    </div>
+
+    <div class="card">
+      <div class="login-tabs">
+        <button class="login-tab active" id="tab-cam" onclick="setLoginMode('camera')">📷 Scanner QR</button>
+        <button class="login-tab" id="tab-img" onclick="setLoginMode('image')">🖼️ Capture d'écran</button>
+      </div>
+
+      <label class="field-label">1. Code PIN à 4 chiffres (choisi sur Pronote)</label>
+      <input type="tel" maxlength="4" id="login-pin" class="input" placeholder="Ex : 1234" />
+
+      <!-- Camera mode -->
+      <div id="mode-camera">
+        <label class="field-label">2. Scanne ton QR Code Pronote</label>
+        <div id="qr-reader" style="display:none;"></div>
+        <button class="btn" style="width:100%;" id="btn-start-cam" onclick="startCameraScanner()">📷 Ouvrir la caméra</button>
+      </div>
+
+      <!-- Image upload mode -->
+      <div id="mode-image" style="display:none;">
+        <label class="field-label">2. Choisis la capture d'écran de ton QR Code Pronote</label>
+        <input type="file" accept="image/*" id="login-qr-file" class="input" />
+        <button class="btn" style="width:100%;" id="btn-upload-qr" onclick="loginWithQrImage()">🚀 Connecter mon Pronote</button>
+      </div>
+
+      <div id="login-status" class="status-msg"></div>
+
+      <details style="margin-top:14px;font-size:0.8rem;color:var(--muted);">
+        <summary style="cursor:pointer;">⚙️ Serveur API (utile pour l'appli Android APK)</summary>
+        <div style="margin-top:8px;">
+          <input type="url" id="server-url-input" class="input" placeholder="https://ton-serveur.onrender.com (laisser vide sur le web)" />
+          <button class="btn btn-sm btn-ghost" onclick="saveServerUrl()">Enregistrer l'URL</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card" style="font-size:0.82rem;color:var(--muted);">
+      <strong style="color:var(--text);">Comment avoir ton QR Code Pronote ?</strong><br />
+      Sur Pronote (PC ou téléphone), clique sur l'icône <strong>QR Code</strong> à côté de ton nom → choisis un code à 4 chiffres → scanne-le ici !
+    </div>
+  </div>
+
+  <!-- ================= MAIN APP SCREEN ================= -->
+  <div id="app-screen">
+    <header>
+      <div class="hdr-title">
+        <h1 id="student-name">🎓 Pronote Coach</h1>
+        <p id="sync-status">Chargement...</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" onclick="syncPronote()" id="sync-btn">🔄 Synchro</button>
+        <button class="btn btn-sm btn-ghost" onclick="openProfileDesktop()">⚙️</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Column / Tab: To-Do & Devoirs -->
+      <div id="sec-todo" class="tab-section">
+        <div class="card" style="margin-bottom:14px;">
+          <h2>
+            <span>📋 Super To-Do Coach</span>
+            <span id="coach-progress" style="font-size:0.82rem;color:var(--muted)"></span>
+          </h2>
+          <div style="display:flex;gap:6px;margin-bottom:12px;">
+            <input type="text" id="new-task-subject" class="input" style="margin:0;width:32%;padding:8px 10px;font-size:14px;" placeholder="Matière" />
+            <input type="text" id="new-task-title" class="input" style="margin:0;flex:1;padding:8px 10px;font-size:14px;" placeholder="Ajouter une révision..." onkeydown="if(event.key==='Enter') addCustomTask()" />
+            <button class="btn btn-sm" onclick="addCustomTask()">+</button>
+          </div>
+          <div id="coach-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>📚 Devoirs & Contrôles Pronote</h2>
+          <div id="hw-list"></div>
+        </div>
+      </div>
+
+      <!-- Column / Tab: EDT -->
+      <div id="sec-edt" class="tab-section">
+        <div class="card">
+          <h2>🗓️ Emploi du Temps & Alertes</h2>
+          <div id="lessons-list"></div>
+        </div>
+      </div>
+
+      <!-- Tab Mobile Only: Notes -->
+      <div id="sec-notes" class="tab-section">
+        <div class="card">
+          <h2>📊 Moyennes</h2>
+          <div id="averages-list-mobile"></div>
+        </div>
+      </div>
+
+      <!-- Tab Mobile Only: Profil -->
+      <div id="sec-profile" class="tab-section">
+        <div class="card">
+          <h2>⚙️ Mon Compte & Clé IA</h2>
+          <p id="profile-info" style="font-size:0.88rem;color:var(--muted);margin-bottom:14px;"></p>
+          <label class="field-label">Clé API Gemini (gratuite sur aistudio.google.com/apikey)</label>
+          <input type="password" id="profile-api-key" class="input" placeholder="AIza..." />
+          <button class="btn btn-sm" onclick="saveApiKeyFromProfile()" style="margin-bottom:18px;">Enregistrer la clé IA</button>
+          <hr style="border-color:var(--border);margin-bottom:16px;" />
+          <button class="btn btn-danger" style="width:100%;" onclick="logout()">🚪 Se déconnecter de Pronote</button>
+        </div>
+      </div>
+
+      <!-- Column / Tab: Coach Chat (Default active on mobile) -->
+      <div id="sec-chat" class="tab-section active">
+        <div class="card chat-card" style="margin-bottom:14px;">
+          <h2>
+            <span>✨ Ton Prof Particulier IA</span>
+            <button class="btn btn-sm btn-ghost" onclick="resetChat()">Nouveau</button>
+          </h2>
+
+          <div id="key-banner" style="display:none;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:12px;padding:10px;margin-bottom:10px;font-size:0.8rem;">
+            🔑 Ajoute une clé gratuite <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fcd34d">Google AI Studio</a> dans <strong>⚙️ Profil</strong> pour activer le chat !
+          </div>
+
+          <div class="chat-messages" id="chat-messages">
+            <div class="msg bot">Salut ! 👋 Je suis ton prof particulier connecté en direct à ton Pronote. Qu'est-ce qu'on bosse ensemble ?</div>
+          </div>
+
+          <div class="quick-chips">
+            <button class="chip" onclick="quickAsk('Que dois-je faire en priorité aujourd\\'hui et demain ?')">🎯 Priorités</button>
+            <button class="chip" onclick="quickAsk('Fais-moi un plan de révision pour mon prochain contrôle')">📅 Plan révisions</button>
+            <button class="chip" onclick="quickAsk('Fais-moi un quiz de 5 questions sur ma prochaine évaluation')">🧠 Quiz rapide</button>
+            <button class="chip" onclick="quickAsk('Quelles matières je dois remonter en priorité selon mes moyennes ?')">📈 Remontada</button>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Pose ta question..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+
+        <div class="card" id="desktop-averages-card">
+          <h2>📊 Moyennes</h2>
+          <div id="averages-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-nav" id="mobile-nav" style="display:none;">
+    <button class="nav-btn active" onclick="switchTab('chat', this)"><span class="nav-icon">💬</span>Coach</button>
+    <button class="nav-btn" onclick="switchTab('todo', this)"><span class="nav-icon">✅</span>To-Do</button>
+    <button class="nav-btn" onclick="switchTab('edt', this)"><span class="nav-icon">🗓️</span>EDT</button>
+    <button class="nav-btn" onclick="switchTab('notes', this)"><span class="nav-icon">📊</span>Notes</button>
+    <button class="nav-btn" onclick="switchTab('profile', this)"><span class="nav-icon">⚙️</span>Profil</button>
+  </nav>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    let currentInteractionId = null;
+    let html5QrScanner = null;
+
+    function getApiBase() {
+      const saved = (localStorage.getItem('pc_server_url') || '').trim().replace(/\/$/, '');
+      if (saved) return saved;
+      // If running inside Capacitor Android WebView without saved URL, user sets it once
+      if (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost' && window.location.port === '') {
+        return saved;
+      }
+      return '';
+    }
+
+    function getToken() { return localStorage.getItem('pc_token') || ''; }
+
+    function saveServerUrl() {
+      const v = document.getElementById('server-url-input').value.trim().replace(/\/$/, '');
+      localStorage.setItem('pc_server_url', v);
+      showLoginStatus('URL serveur enregistrée !', 'ok');
+    }
+
+    function showLoginStatus(msg, type) {
+      const el = document.getElementById('login-status');
+      el.textContent = msg;
+      el.className = 'status-msg ' + type;
+    }
+
+    function setLoginMode(mode) {
+      document.getElementById('tab-cam').classList.toggle('active', mode === 'camera');
+      document.getElementById('tab-img').classList.toggle('active', mode === 'image');
+      document.getElementById('mode-camera').style.display = mode === 'camera' ? 'block' : 'none';
+      document.getElementById('mode-image').style.display = mode === 'image' ? 'block' : 'none';
+      if (mode !== 'camera' && html5QrScanner) {
+        html5QrScanner.stop().catch(() => {});
+      }
+    }
+
+    async function startCameraScanner() {
+      const pin = document.getElementById('login-pin').value.trim();
+      if (pin.length !== 4) {
+        showLoginStatus('Entre d\'abord ton code PIN à 4 chiffres choisi sur Pronote !', 'err');
+        return;
+      }
+      const readerEl = document.getElementById('qr-reader');
+      readerEl.style.display = 'block';
+      document.getElementById('btn-start-cam').disabled = true;
+      showLoginStatus('Caméra ouverte — vise ton QR Code Pronote...', 'ok');
+
+      try {
+        html5QrScanner = new Html5Qrcode('qr-reader');
+        await html5QrScanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 240, height: 240 } },
+          async (decodedText) => {
+            await html5QrScanner.stop();
+            readerEl.style.display = 'none';
+            await loginWithQrJson(decodedText, pin);
+          }
+        );
+      } catch (e) {
+        document.getElementById('btn-start-cam').disabled = false;
+        showLoginStatus('Caméra indisponible (' + e + '). Utilise l\'onglet "Capture d\'écran" !', 'err');
+      }
+    }
+
+    async function loginWithQrJson(qrJson, pin) {
+      showLoginStatus('Connexion à Pronote en cours...', 'ok');
+      try {
+        const res = await fetch(getApiBase() + '/api/auth/qr-json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qr_json: qrJson, pin })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Erreur connexion');
+        localStorage.setItem('pc_token', data.token);
+        initApp();
+      } catch (e) {
+        document.getElementById('btn-start-cam').disabled = false;
+        showLoginStatus('❌ ' + e.message, 'err');
+      }
+    }
+
+    async function loginWithQrImage() {
+      const pin = document.getElementById('login-pin').value.trim();
+      const fileInput = document.getElementById('login-qr-file');
+      if (pin.length !== 4) { showLoginStatus('Entre ton code PIN à 4 chiffres !', 'err'); return; }
+      if (!fileInput.files.length) { showLoginStatus('Choisis l\'image de ton QR Code Pronote !', 'err'); return; }
+
+      const btn = document.getElementById('btn-upload-qr');
+      btn.disabled = true;
+      showLoginStatus('Lecture du QR Code et connexion à Pronote...', 'ok');
+      try {
+        const fd = new FormData();
+        fd.append('pin', pin);
+        fd.append('file', fileInput.files[0]);
+        const res = await fetch(getApiBase() + '/api/auth/qr-image', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Erreur connexion');
+        localStorage.setItem('pc_token', data.token);
+        initApp();
+      } catch (e) {
+        showLoginStatus('❌ ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function apiFetch(path, opts = {}) {
+      opts.headers = Object.assign({}, opts.headers || {}, { 'X-Session-Token': getToken() });
+      const res = await fetch(getApiBase() + path, opts);
+      if (res.status === 401) {
+        localStorage.removeItem('pc_token');
+        showLoginScreen();
+        throw new Error('Session expirée');
+      }
+      return res;
+    }
+
+    function showLoginScreen() {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-screen').style.display = 'none';
+      document.getElementById('mobile-nav').style.display = 'none';
+      document.getElementById('server-url-input').value = localStorage.getItem('pc_server_url') || '';
+    }
+
+    async function initApp() {
+      if (!getToken()) { showLoginScreen(); return; }
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'block';
+      try {
+        const res = await apiFetch('/api/me');
+        const data = await res.json();
+        renderAll(data);
+        applyResponsive();
+      } catch (e) {}
+    }
+
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-section').forEach(el => {
+        el.classList.remove('active');
+        if (window.innerWidth <= 1024) el.style.display = 'none';
+      });
+      const target = document.getElementById('sec-' + name);
+      target.classList.add('active');
+      if (window.innerWidth <= 1024) target.style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function openProfileDesktop() {
+      if (window.innerWidth <= 1024) {
+        switchTab('profile', document.querySelectorAll('.nav-btn')[4]);
+      } else {
+        const p = document.getElementById('sec-profile');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+      }
+    }
+
+    function applyResponsive() {
+      if (!getToken()) return;
+      const mobile = window.innerWidth <= 1024;
+      document.getElementById('mobile-nav').style.display = mobile ? 'grid' : 'none';
+      document.getElementById('desktop-averages-card').style.display = mobile ? 'none' : 'block';
+      if (!mobile) {
+        document.getElementById('sec-todo').style.display = 'block';
+        document.getElementById('sec-edt').style.display = 'block';
+        document.getElementById('sec-chat').style.display = 'block';
+        document.getElementById('sec-notes').style.display = 'none';
+        document.getElementById('sec-profile').style.display = 'none';
+      } else {
+        document.querySelectorAll('.tab-section').forEach(el => {
+          el.style.display = el.classList.contains('active') ? 'block' : 'none';
+        });
+      }
+    }
+    window.addEventListener('resize', applyResponsive);
+
+    async function syncPronote() {
+      const btn = document.getElementById('sync-btn');
+      btn.textContent = '⏳';
+      btn.disabled = true;
+      try {
+        const res = await apiFetch('/api/sync', { method: 'POST' });
+        const json = await res.json();
+        if (json.ok) renderAll(json.data);
+      } finally {
+        btn.textContent = '🔄 Synchro';
+        btn.disabled = false;
+      }
+    }
+
+    async function toggleTask(id, kind) {
+      await apiFetch('/api/tasks/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, kind })
+      });
+      initApp();
+    }
+
+    async function addCustomTask() {
+      const subj = document.getElementById('new-task-subject').value.trim() || 'RÉVISION';
+      const title = document.getElementById('new-task-title').value.trim();
+      if (!title) return;
+      document.getElementById('new-task-title').value = '';
+      await apiFetch('/api/tasks/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subj, title })
+      });
+      initApp();
+    }
+
+    async function saveApiKeyFromProfile() {
+      const key = document.getElementById('profile-api-key').value.trim();
+      if (!key) return;
+      await apiFetch('/api/settings/api-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: key })
+      });
+      alert('✅ Clé Gemini enregistrée !');
+      initApp();
+    }
+
+    async function logout() {
+      if (!confirm('Te déconnecter de ton compte Pronote sur cet appareil ?')) return;
+      try { await apiFetch('/api/logout', { method: 'POST' }); } catch (e) {}
+      localStorage.removeItem('pc_token');
+      showLoginScreen();
+    }
+
+    function appendMsg(role, text) {
+      const box = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'msg ' + role;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function resetChat() {
+      currentInteractionId = null;
+      document.getElementById('chat-messages').innerHTML =
+        '<div class="msg bot">Nouvelle discussion prête ! Comment puis-je t\'aider ?</div>';
+    }
+
+    function quickAsk(text) {
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      appendMsg('user', text);
+      const loading = appendMsg('bot', '⏳ Je réfléchis...');
+      try {
+        const res = await apiFetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, previous_interaction_id: currentInteractionId })
+        });
+        const json = await res.json();
+        if (res.ok && json.reply) {
+          loading.textContent = json.reply;
+          currentInteractionId = json.interaction_id;
+        } else {
+          loading.textContent = '⚠️ ' + (json.detail || 'Erreur chat');
+        }
+      } catch (e) {
+        loading.textContent = '⚠️ ' + e.message;
+      }
+    }
+
+    function renderAll(data) {
+      document.getElementById('student-name').textContent = `🎓 ${data.student.name} (${data.student.class_name})`;
+      document.getElementById('sync-status').textContent = `${data.student.establishment} • ${data.student.synced_at.replace('T', ' ')}`;
+      document.getElementById('profile-info').textContent = `Connecté en tant que ${data.student.name} (${data.student.class_name}) — ${data.student.establishment}`;
+      document.getElementById('key-banner').style.display = data.has_gemini_key ? 'none' : 'block';
+
+      const tasks = data.coach_tasks || [];
+      document.getElementById('coach-progress').textContent = `${tasks.filter(t => t.done).length}/${tasks.length}`;
+      document.getElementById('coach-list').innerHTML = tasks.length ? tasks.map(t => `
+        <div class="task-item ${t.done ? 'done' : ''}">
+          <input type="checkbox" class="task-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}', 'coach')" />
+          <div class="task-body">
+            <div class="task-meta">
+              <span class="badge ${t.priority}">${t.day}</span>
+              <span class="badge normal">${t.subject}</span>
+              <span class="badge ok">⏱️ ${t.duration}</span>
+            </div>
+            <div class="task-title">${t.title}</div>
+            <div class="task-desc">${t.details}</div>
+          </div>
+        </div>
+      `).join('') : '<p style="color:var(--muted);font-size:0.86rem;">Aucune tâche pour le moment ! Ajoute-en une ci-dessus.</p>';
+
+      document.getElementById('hw-list').innerHTML = (data.homework || []).map(h => `
+        <div class="task-item ${h.done ? 'done' : ''}">
+          <input type="checkbox" class="task-checkbox" ${h.done ? 'checked' : ''} onchange="toggleTask('${h.id}', 'homework')" />
+          <div class="task-body">
+            <div class="task-meta">
+              <span class="badge ${h.priority.level}">Pour le ${h.date}</span>
+              <span class="badge normal">${h.subject}</span>
+              ${h.type === 'controle' ? '<span class="badge critical">🚨 CONTRÔLE</span>' : ''}
+            </div>
+            <div class="task-desc">${h.description}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('lessons-list').innerHTML = (data.lessons || []).length ? data.lessons.map(l => {
+        const cls = l.canceled ? 'canceled' : (l.test || (l.status && l.status.includes('CCF')) ? 'test' : '');
+        return `
+          <div class="lesson-item ${cls}">
+            <div>
+              <strong>${l.start.slice(0, 10)} • ${l.start.slice(11, 16)}-${l.end.slice(11, 16)}</strong> — ${l.subject}
+              <div style="font-size:0.76rem;color:var(--muted)">${l.teacher} ${l.classroom ? '• Salle ' + l.classroom : ''}</div>
+            </div>
+            <div>
+              ${l.canceled ? '<span class="badge critical">❌ ANNULÉ</span>' : ''}
+              ${l.test ? '<span class="badge high">🚨 ÉVALUATION</span>' : ''}
+              ${l.status && !l.canceled ? `<span class="badge high">${l.status}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('') : '<p style="color:var(--muted);font-size:0.86rem;">Emploi du temps non disponible.</p>';
+
+      const avgHtml = Object.entries(data.averages || {}).map(([subj, val]) => {
+        const num = parseFloat(String(val.student).replace(',', '.'));
+        const color = num >= 14 ? '#10b981' : (num >= 11 ? '#f59e0b' : '#ef4444');
+        const advice = num < 10.5 ? '⚠️ Priorité' : (num >= 14 ? '🔥 Point fort' : '👍 Correct');
+        return `
+          <div class="avg-row">
+            <div>
+              <strong>${subj}</strong>
+              <div style="font-size:0.76rem;color:var(--muted)">Classe : ${val.class_average}/20 • ${advice}</div>
+            </div>
+            <div class="avg-score" style="color:${color}">${val.student} / 20</div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('averages-list').innerHTML = avgHtml || '<p style="color:var(--muted);">Aucune moyenne disponible.</p>';
+      document.getElementById('averages-list-mobile').innerHTML = avgHtml || '<p style="color:var(--muted);">Aucune moyenne disponible.</p>';
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
