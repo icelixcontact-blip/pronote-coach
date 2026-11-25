@@ -224,13 +224,27 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
     except Exception:
         pass
 
-    # Grades & Averages
+    # Grades & Averages (use current period, or fallback to latest period with grades when a new trimester starts)
     grades_list = []
     subject_averages = {}
+    active_period_name = "Trimestre en cours"
     try:
-        period = client.current_period
-        if period:
-            for g in period.grades:
+        periods_to_check = []
+        if client.current_period:
+            periods_to_check.append(client.current_period)
+        for p in getattr(client, "periods", []) or []:
+            if p not in periods_to_check and getattr(p, "grades", None):
+                periods_to_check.append(p)
+
+        chosen_period = None
+        for p in periods_to_check:
+            if getattr(p, "grades", None):
+                chosen_period = p
+                break
+
+        if chosen_period:
+            active_period_name = getattr(chosen_period, "name", "Période")
+            for g in chosen_period.grades:
                 subj = g.subject.name if g.subject else "Autre"
                 grades_list.append({
                     "id": str(g.id),
@@ -241,8 +255,9 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
                     "comment": g.comment or "",
                     "coefficient": str(g.coefficient),
                     "average": str(g.average or ""),
+                    "period": active_period_name,
                 })
-            for avg in getattr(period, "averages", []) or []:
+            for avg in getattr(chosen_period, "averages", []) or []:
                 subj = avg.subject.name if avg.subject else "Général"
                 subject_averages[subj] = {
                     "student": str(avg.student),
@@ -254,9 +269,10 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
 
     payload = {
         "student": student_info,
+        "period_name": active_period_name,
         "homework": homework_list,
         "lessons": lessons_list,
-        "grades": grades_list[:20],
+        "grades": grades_list[:25],
         "averages": subject_averages,
     }
     (sdir / "pronote_data.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -299,6 +315,10 @@ def _build_system_instruction(sdir: Path) -> str:
         f"- {subj}: {v['student']}/20 (classe {v['class_average']}/20)"
         for subj, v in data.get("averages", {}).items()
     )
+    grades_txt = "\n".join(
+        f"- {g['date']} | {g['subject']}: {g['grade']}/{g['out_of']} (coeff {g['coefficient']}, classe {g['average']}){' - ' + g['comment'] if g.get('comment') else ''}"
+        for g in data.get("grades", [])[:25]
+    )
     tasks_txt = "\n".join(
         f"- [{'x' if t['done'] else ' '}] {t['day']} | {t['subject']}: {t['title']}"
         for t in tasks
@@ -311,7 +331,8 @@ def _build_system_instruction(sdir: Path) -> str:
         f"DATE DU JOUR : {datetime.date.today().isoformat()}\n\n"
         f"DEVOIRS & CONTROLES :\n{hw_txt or 'Aucun'}\n\n"
         f"EMPLOI DU TEMPS :\n{les_txt or 'Non disponible'}\n\n"
-        f"MOYENNES :\n{avg_txt or 'Non disponibles'}\n\n"
+        f"MOYENNES ({data.get('period_name', 'Trimestre')}) :\n{avg_txt or 'Non disponibles'}\n\n"
+        f"DERNIERES NOTES :\n{grades_txt or 'Aucune'}\n\n"
         f"TO-DO LIST ACTUELLE :\n{tasks_txt or 'Vide'}\n"
     )
 

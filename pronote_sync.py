@@ -229,13 +229,27 @@ def sync_all(days_ahead: int = 28) -> dict:
     except Exception as e:
         print(f"Note: emploi du temps non disponible via PageEmploiDuTemps ({e})", file=sys.stderr)
 
-    # 3. Fetch Current Period Grades & Subject Averages (to know where the student needs extra help!)
+    # 3. Fetch Grades & Subject Averages (current period, or fallback to latest non-empty period like Trimestre 1)
     grades_list = []
     subject_averages = {}
+    active_period_name = "Trimestre en cours"
     try:
-        period = client.current_period
-        if period:
-            for g in period.grades:
+        periods_to_check = []
+        if client.current_period:
+            periods_to_check.append(client.current_period)
+        for p in getattr(client, "periods", []) or []:
+            if p not in periods_to_check and getattr(p, "grades", None):
+                periods_to_check.append(p)
+
+        chosen_period = None
+        for p in periods_to_check:
+            if getattr(p, "grades", None):
+                chosen_period = p
+                break
+
+        if chosen_period:
+            active_period_name = getattr(chosen_period, "name", "Période")
+            for g in chosen_period.grades:
                 subj = g.subject.name if g.subject else "Autre"
                 grades_list.append({
                     "id": str(g.id),
@@ -246,8 +260,9 @@ def sync_all(days_ahead: int = 28) -> dict:
                     "comment": g.comment or "",
                     "coefficient": str(g.coefficient),
                     "average": str(g.average or ""),
+                    "period": active_period_name,
                 })
-            for avg in getattr(period, "averages", []) or []:
+            for avg in getattr(chosen_period, "averages", []) or []:
                 subj = avg.subject.name if avg.subject else "Général"
                 subject_averages[subj] = {
                     "student": str(avg.student),
@@ -260,9 +275,10 @@ def sync_all(days_ahead: int = 28) -> dict:
 
     payload = {
         "student": student_info,
+        "period_name": active_period_name,
         "homework": homework_list,
         "lessons": lessons_list,
-        "grades": grades_list[:20],
+        "grades": grades_list[:25],
         "averages": subject_averages,
     }
 
@@ -306,13 +322,13 @@ def export_markdown_summary(data: dict) -> Path:
         )
 
     lines.append("")
-    lines.append("## Moyennes actuelles (Trimestre 1)")
+    lines.append(f"## Moyennes actuelles ({data.get('period_name', 'Trimestre 1')})")
     for subj, val in data.get("averages", {}).items():
         lines.append(f"- **{subj}** : {val.get('student')}/20 (moyenne classe : {val.get('class_average')}/20)")
 
     lines.append("")
-    lines.append("## Dernières notes")
-    for g in data.get("grades", [])[:15]:
+    lines.append(f"## Dernières notes ({data.get('period_name', 'Trimestre 1')})")
+    for g in data.get("grades", [])[:25]:
         cmt = f" — {g['comment']}" if g.get("comment") else ""
         lines.append(f"- {g['date']} | **{g['subject']}** : {g['grade']}/{g['out_of']} (coeff {g['coefficient']}, classe {g['average']}){cmt}")
 
