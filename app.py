@@ -183,12 +183,20 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
         })
     homework_list.sort(key=lambda x: (x["done"], -x["priority"]["score"], x["date"]))
 
-    # Lessons (week-by-week resilient fetch)
+    # Lessons (full current week Monday->Sunday + next week, resilient week-by-week)
+    # Also cross-reference homework tests/contrôles on the same day & subject so they light up in RED!
+    hw_tests_by_day_subj = set()
+    for hw in homework_list:
+        if hw.get("type") == "controle":
+            hw_tests_by_day_subj.add((hw["date"], hw["subject"].strip().upper()))
+
     lessons_list = []
     try:
         user = client.parametres_utilisateur["dataSec"]["data"]["ressource"]
-        first_week = client.get_week(today)
-        last_week = client.get_week(today + datetime.timedelta(days=14))
+        monday_this_week = today - datetime.timedelta(days=today.weekday())
+        first_week = client.get_week(monday_this_week)
+        last_week = client.get_week(monday_this_week + datetime.timedelta(days=13))
+        seen_ids = set()
         for week in range(first_week, last_week + 1):
             req_data = {
                 "ressource": user,
@@ -205,9 +213,23 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
             resp = client.post("PageEmploiDuTemps", 16, req_data)
             for raw_l in resp.get("dataSec", {}).get("data", {}).get("ListeCours", []):
                 les = dc.Lesson(client, raw_l)
-                if les.start.date() < today:
+                if les.start.date() < monday_this_week:
                     continue
+                lid = f"{les.id}_{les.start.isoformat()}"
+                if lid in seen_ids:
+                    continue
+                seen_ids.add(lid)
                 subj = les.subject.name if les.subject else (les.status or "Cours")
+                les_date = les.start.date().isoformat()
+                status_str = les.status or ""
+                is_eval = (
+                    bool(getattr(les, "test", False))
+                    or ("CCF" in status_str.upper())
+                    or ("DST" in subj.upper())
+                    or ("DEVOIR SUR TABLE" in subj.upper())
+                    or ("BAC BLANC" in status_str.upper())
+                    or ((les_date, subj.strip().upper()) in hw_tests_by_day_subj)
+                )
                 lessons_list.append({
                     "id": str(les.id),
                     "subject": subj,
@@ -216,8 +238,8 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
                     "classroom": les.classroom or "",
                     "teacher": les.teacher_name or "",
                     "canceled": bool(les.canceled),
-                    "status": les.status or "",
-                    "test": bool(getattr(les, "test", False)),
+                    "status": status_str,
+                    "test": bool(is_eval and not les.canceled),
                     "background_color": les.background_color or "#3b82f6",
                 })
         lessons_list.sort(key=lambda x: x["start"])
@@ -272,7 +294,7 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
         "period_name": active_period_name,
         "homework": homework_list,
         "lessons": lessons_list,
-        "grades": grades_list[:25],
+        "grades": grades_list,
         "averages": subject_averages,
     }
     (sdir / "pronote_data.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
