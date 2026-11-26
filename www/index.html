@@ -74,161 +74,265 @@
     .btn-sm { padding: 7px 12px; font-size: 0.82rem; border-radius: 10px; }
 
     /* ============================================================
-       LOGIN / LANDING PAGE — WHITE WITH FLOATING SUBJECT ICONS
+       REAL MARKETING LANDING PAGE — CLEAN WHITE SAAS STYLE
        ============================================================ */
     #login-screen {
       min-height: 100dvh;
-      background:
-        radial-gradient(circle at 18% 22%, rgba(99, 102, 241, 0.08), transparent 42%),
-        radial-gradient(circle at 82% 78%, rgba(124, 58, 237, 0.07), transparent 45%),
-        #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 28px 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .landing-wrap {
-      width: 100%;
-      max-width: 1120px;
-      display: grid;
-      grid-template-columns: 1.15fr 0.9fr;
-      gap: 48px;
-      align-items: center;
-      position: relative;
-      z-index: 2;
-    }
-    @media (max-width: 900px) {
-      .landing-wrap { grid-template-columns: 1fr; gap: 22px; max-width: 480px; }
-    }
-
-    /* Hero Stage with Floating Icons around "Pronote Coach IA" */
-    .hero-stage {
-      position: relative;
-      min-height: 430px;
+      background: #ffffff;
+      color: var(--text);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px 24px;
-    }
-    @media (max-width: 900px) {
-      .hero-stage { min-height: 270px; padding: 36px 10px 18px; }
+      position: relative;
+      overflow-x: hidden;
     }
 
-    .hero-core {
+    /* Sticky Top Navbar */
+    .lp-nav {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.75);
+      padding: 14px 24px;
+    }
+    .lp-nav-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .lp-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .lp-logo-badge {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center; color: #fff; font-size: 1.1rem;
+    }
+    .lp-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .lp-nav-links a {
+      color: #475569;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .lp-nav-links a:hover { color: var(--accent); }
+    @media (max-width: 720px) { .lp-nav-links a.hide-xs { display: none; } }
+
+    /* Hero Section */
+    .lp-hero {
+      position: relative;
+      padding: 86px 20px 76px;
+      background:
+        radial-gradient(ellipse 65% 55% at 50% 0%, rgba(99, 102, 241, 0.11), transparent 70%),
+        radial-gradient(circle at 15% 80%, rgba(16, 185, 129, 0.06), transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(124, 58, 237, 0.08), transparent 42%),
+        #ffffff;
+      overflow: hidden;
+    }
+    .lp-hero-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      text-align: center;
       position: relative;
       z-index: 3;
-      max-width: 420px;
+      padding: 20px 0;
     }
-    .hero-badge {
+    .lp-eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: #eef2ff;
-      color: var(--accent);
-      border: 1px solid #c7d2fe;
-      padding: 5px 13px;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 6px 14px;
       border-radius: 999px;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      margin-bottom: 14px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
     }
-    .hero-core h1 {
-      font-size: clamp(2rem, 4vw, 3rem);
+    .lp-eyebrow span.dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;
+    }
+    .lp-hero h1 {
+      font-size: clamp(2.35rem, 5.4vw, 4.1rem);
       font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 1.12;
-      background: linear-gradient(135deg, #0f172a 20%, #4f46e5 75%, #7c3aed 100%);
+      letter-spacing: -0.04em;
+      line-height: 1.07;
+      color: #0f172a;
+      margin-bottom: 20px;
+    }
+    .lp-hero h1 .grad {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #ec4899 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 12px;
     }
-    .hero-core p {
-      color: var(--muted);
-      font-size: 1rem;
-      max-width: 380px;
-      margin: 0 auto 18px;
+    .lp-hero p.lead {
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      color: #475569;
+      max-width: 600px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
     }
-    .hero-pills {
+    .lp-cta-row {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 18px;
     }
-    .hero-pill {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #334155;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    .btn-xl {
+      padding: 14px 26px;
+      font-size: 1rem;
+      border-radius: 14px;
+    }
+    .lp-trust {
+      font-size: 0.82rem;
+      color: #64748b;
+      font-weight: 500;
     }
 
-    /* Floating Subject Bubbles */
+    /* Pure Floating Subject Icons (NO text labels!) */
     .float-icon {
       position: absolute;
       z-index: 2;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(255, 255, 255, 0.92);
+      width: 62px;
+      height: 62px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(8px);
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 9px 13px;
-      box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.12);
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #1e293b;
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      box-shadow: 0 14px 34px -10px rgba(15, 23, 42, 0.14);
+      display: grid;
+      place-items: center;
+      font-size: 1.85rem;
       user-select: none;
       pointer-events: none;
-      animation: floatSlow 7s ease-in-out infinite;
+      animation: floatSlow 7.5s ease-in-out infinite;
     }
-    .float-icon .ic { font-size: 1.25rem; line-height: 1; }
     @media (max-width: 900px) {
-      .float-icon { padding: 6px 9px; font-size: 0.7rem; border-radius: 12px; }
-      .float-icon .ic { font-size: 1rem; }
+      .lp-hero { padding: 56px 16px 52px; }
+      .float-icon { width: 44px; height: 44px; border-radius: 14px; font-size: 1.3rem; }
       .float-icon.hide-sm { display: none; }
     }
-
     @keyframes floatSlow {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-13px) rotate(2deg); }
+      50% { transform: translateY(-16px) rotate(4deg); }
     }
     @keyframes floatSlowAlt {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(12px) rotate(-2deg); }
+      50% { transform: translateY(15px) rotate(-4deg); }
     }
+    .fi-1 { top: 14%;    left: 8%;   animation-duration: 7.2s; animation-delay: 0s; }
+    .fi-2 { top: 16%;    right: 9%;  animation-name: floatSlowAlt; animation-duration: 8.1s; animation-delay: 0.5s; }
+    .fi-3 { top: 52%;    left: 4%;   animation-duration: 8.8s; animation-delay: 1.1s; }
+    .fi-4 { top: 54%;    right: 5%;  animation-name: floatSlowAlt; animation-duration: 7.6s; animation-delay: 1.4s; }
+    .fi-5 { bottom: 10%; left: 16%;  animation-duration: 9.2s; animation-delay: 0.8s; }
+    .fi-6 { bottom: 12%; right: 16%; animation-name: floatSlowAlt; animation-duration: 8.4s; animation-delay: 1.9s; }
 
-    .fi-maths    { top: 4%;    left: 6%;   animation-duration: 6.8s; animation-delay: 0s;   border-color: #c7d2fe; }
-    .fi-physique { top: 8%;    right: 6%;  animation-name: floatSlowAlt; animation-duration: 7.5s; animation-delay: 0.6s; border-color: #bae6fd; }
-    .fi-francais { bottom: 12%; left: 3%;  animation-duration: 8.2s; animation-delay: 1.2s; border-color: #fecdd3; }
-    .fi-anglais  { bottom: 8%;  right: 5%; animation-name: floatSlowAlt; animation-duration: 7.1s; animation-delay: 0.9s; border-color: #fde68a; }
-    .fi-histoire { top: 44%;   left: -2%;  animation-duration: 8.8s; animation-delay: 1.8s; border-color: #bbf7d0; }
-    .fi-espagnol { top: 45%;   right: -1%; animation-name: floatSlowAlt; animation-duration: 7.9s; animation-delay: 1.5s; border-color: #fed7aa; }
-    .fi-svt      { bottom: 0%;  left: 38%; animation-duration: 9.0s; animation-delay: 0.3s; border-color: #a7f3d0; }
+    /* Bento Features Section */
+    .lp-section {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      width: 100%;
+    }
+    .lp-sec-head {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .lp-sec-head h2 {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .lp-sec-head p { color: var(--muted); font-size: 0.98rem; }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .bento-grid { grid-template-columns: 1fr; } }
+    .bento-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .bento-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .bento-ic {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 1.45rem;
+      margin-bottom: 16px;
+    }
+    .bento-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+    .bento-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+
+    /* Connect Section (2-Column PC Split) */
+    .connect-wrap {
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      border-top: 1px solid var(--border);
+      padding: 64px 20px 72px;
+      width: 100%;
+    }
+    .connect-grid {
+      max-width: 1040px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 44px;
+      align-items: center;
+    }
+    @media (max-width: 900px) { .connect-grid { grid-template-columns: 1fr; gap: 28px; } }
+    .step-list { display: flex; flex-direction: column; gap: 18px; margin-top: 22px; }
+    .step-item { display: flex; gap: 14px; align-items: flex-start; }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: #eef2ff; color: var(--accent);
+      font-weight: 800; font-size: 0.9rem;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .step-item strong { display: block; font-size: 0.96rem; margin-bottom: 2px; }
+    .step-item span { font-size: 0.86rem; color: var(--muted); }
 
     /* Login Card */
     .login-card {
       background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 24px;
-      padding: 26px;
+      padding: 28px;
       box-shadow: var(--shadow-lg);
     }
-    .login-card h2 {
-      font-size: 1.2rem;
-      font-weight: 800;
-      margin-bottom: 4px;
-      color: var(--text);
+    .login-card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+    .login-card .sub { font-size: 0.86rem; color: var(--muted); margin-bottom: 18px; }
+
+    .lp-footer {
+      text-align: center;
+      padding: 24px 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.82rem;
+      background: #ffffff;
     }
-    .login-card .sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 18px; }
 
     .field-label { font-size: 0.84rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block; }
     .input, select.input {
@@ -524,72 +628,150 @@
   </style>
 </head>
 <body>
-  <!-- ================= WHITE LANDING / LOGIN SCREEN ================= -->
+  <!-- ================= REAL MARKETING LANDING PAGE ================= -->
   <div id="login-screen">
-    <div class="landing-wrap">
-      <!-- Left: Hero + Slowly Floating Subject Icons -->
-      <div class="hero-stage">
-        <div class="float-icon fi-maths"><span class="ic">📐</span><span>Maths</span></div>
-        <div class="float-icon fi-physique"><span class="ic">🧪</span><span>Physique</span></div>
-        <div class="float-icon fi-francais"><span class="ic">✒️</span><span>Français</span></div>
-        <div class="float-icon fi-anglais"><span class="ic">🇬🇧</span><span>Anglais</span></div>
-        <div class="float-icon fi-histoire hide-sm"><span class="ic">🌍</span><span>Histoire-Géo</span></div>
-        <div class="float-icon fi-espagnol hide-sm"><span class="ic">🇪🇸</span><span>Espagnol</span></div>
-        <div class="float-icon fi-svt hide-sm"><span class="ic">🧬</span><span>Sciences</span></div>
-
-        <div class="hero-core">
-          <div class="hero-badge">✨ Ton Prof Particulier IA • PC & Mobile</div>
-          <h1>Pronote Coach IA</h1>
-          <p>Organise tes devoirs, repère tes évaluations en rouge sur ton emploi du temps, suis ta progression en graphiques et révise avec ton Coach IA.</p>
-          <div class="hero-pills">
-            <span class="hero-pill">🔴 Évals en rouge</span>
-            <span class="hero-pill">📈 Courbes de notes</span>
-            <span class="hero-pill">💬 Coach Gemini</span>
-          </div>
+    <!-- Top Sticky Navbar -->
+    <nav class="lp-nav">
+      <div class="lp-nav-inner">
+        <a href="#" class="lp-logo">
+          <span class="lp-logo-badge">🎓</span>
+          <span>Pronote Coach IA</span>
+        </a>
+        <div class="lp-nav-links">
+          <a href="#features" class="hide-xs">Fonctionnalités</a>
+          <a href="#connect" class="hide-xs">Comment ça marche</a>
+          <a href="#connect" class="btn btn-sm" style="text-decoration:none;">Connexion →</a>
         </div>
       </div>
+    </nav>
 
-      <!-- Right: Clean White Pronote QR Login Card -->
-      <div class="login-card">
-        <h2>Connexion Pronote</h2>
-        <p class="sub">Scanne ou importe ton QR Code Pronote en 15 secondes.</p>
+    <!-- Hero Section with Pure Floating Icons -->
+    <section class="lp-hero">
+      <div class="float-icon fi-1" aria-hidden="true">📐</div>
+      <div class="float-icon fi-2" aria-hidden="true">🧪</div>
+      <div class="float-icon fi-3 hide-sm" aria-hidden="true">✒️</div>
+      <div class="float-icon fi-4 hide-sm" aria-hidden="true">🇬🇧</div>
+      <div class="float-icon fi-5" aria-hidden="true">🌍</div>
+      <div class="float-icon fi-6" aria-hidden="true">🧬</div>
 
-        <div class="login-tabs">
-          <button class="login-tab active" id="tab-cam" onclick="setLoginMode('camera')">📷 Scanner QR</button>
-          <button class="login-tab" id="tab-img" onclick="setLoginMode('image')">🖼️ Capture d'écran</button>
+      <div class="lp-hero-inner">
+        <div class="lp-eyebrow">
+          <span class="dot"></span>
+          <span>L'assistant scolaire nouvelle génération • PC & Mobile</span>
         </div>
-
-        <label class="field-label">1. Code PIN à 4 chiffres (choisi sur Pronote)</label>
-        <input type="tel" maxlength="4" id="login-pin" class="input" placeholder="Ex : 1234" />
-
-        <div id="mode-camera">
-          <label class="field-label">2. Scanne ton QR Code Pronote</label>
-          <div id="qr-reader" style="display:none;"></div>
-          <button class="btn" style="width:100%;" id="btn-start-cam" onclick="startCameraScanner()">📷 Ouvrir la caméra</button>
+        <h1>Transforme ton Pronote en <span class="grad">vrai Coach personnel.</span></h1>
+        <p class="lead">
+          Ne subis plus tes devoirs et tes contrôles. Visualise toute ta semaine en un coup d'œil, suis ta progression en graphiques et révise avec ton tuteur IA connecté à tes vrais cours.
+        </p>
+        <div class="lp-cta-row">
+          <a href="#connect" class="btn btn-xl" style="text-decoration:none;">🚀 Connecter mon Pronote</a>
+          <a href="#features" class="btn btn-xl btn-ghost" style="text-decoration:none;">Découvrir l'app</a>
         </div>
-
-        <div id="mode-image" style="display:none;">
-          <label class="field-label">2. Capture d'écran du QR Code Pronote</label>
-          <input type="file" accept="image/*" id="login-qr-file" class="input" />
-          <button class="btn" style="width:100%;" id="btn-upload-qr" onclick="loginWithQrImage()">🚀 Connecter mon Pronote</button>
-        </div>
-
-        <div id="login-status" class="status-msg"></div>
-
-        <details style="margin-top:14px;font-size:0.78rem;color:var(--muted);">
-          <summary style="cursor:pointer;">Comment trouver mon QR Code Pronote ?</summary>
-          <p style="margin-top:6px;">Sur Pronote (PC ou mobile), clique sur l'icône <strong>QR Code</strong> à côté de ton nom, choisis un code à 4 chiffres, puis scanne ou importe l'image ici.</p>
-        </details>
-
-        <details style="margin-top:8px;font-size:0.78rem;color:var(--muted);">
-          <summary style="cursor:pointer;">⚙️ Serveur API avancé</summary>
-          <div style="margin-top:8px;">
-            <input type="url" id="server-url-input" class="input" placeholder="https://pronote-coach.onrender.com" />
-            <button class="btn btn-sm btn-ghost" onclick="saveServerUrl()">Enregistrer</button>
-          </div>
-        </details>
+        <div class="lp-trust">100 % gratuit • Connexion sécurisée par QR Code en 15 s • Données 100 % privées</div>
       </div>
-    </div>
+    </section>
+
+    <!-- Bento Marketing Features -->
+    <section class="lp-section" id="features">
+      <div class="lp-sec-head">
+        <h2>Tout ce qu'il faut pour viser la mention.</h2>
+        <p>Pensé pour te faire gagner du temps chaque soir, sur ordinateur comme sur téléphone.</p>
+      </div>
+      <div class="bento-grid">
+        <div class="bento-card">
+          <div class="bento-ic" style="background:#eef2ff;color:#4f46e5;">🗓️</div>
+          <h3>Toute ta semaine, ultra-claire</h3>
+          <p>Retrouve ton emploi du temps complet du lundi au vendredi, avec tes évaluations, devoirs sur table et cours annulés mis en avant automatiquement.</p>
+        </div>
+        <div class="bento-card">
+          <div class="bento-ic" style="background:#ecfdf5;color:#059669;">📈</div>
+          <h3>Suis ta vraie progression</h3>
+          <p>Des courbes et diagrammes interactifs pour comparer tes résultats à la classe, repérer tes points forts et savoir exactement où gagner des points.</p>
+        </div>
+        <div class="bento-card">
+          <div class="bento-ic" style="background:#fdf2f8;color:#db2777;">✨</div>
+          <h3>Un tuteur disponible 24h/24</h3>
+          <p>Demande un plan de révision jour par jour, fais-toi expliquer un exercice étape par étape ou lance un quiz éclair avant ton prochain contrôle.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Connect Section (2-Column PC Split) -->
+    <section class="connect-wrap" id="connect">
+      <div class="connect-grid">
+        <div>
+          <span class="lp-eyebrow" style="margin-bottom:12px;">⚡ Prêt en 15 secondes</span>
+          <h2 style="font-size:clamp(1.5rem,3vw,2.1rem);font-weight:900;letter-spacing:-0.02em;line-height:1.15;">
+            Branche ton compte Pronote sans donner ton mot de passe.
+          </h2>
+          <p style="color:var(--muted);margin-top:10px;font-size:0.94rem;">
+            La connexion utilise le QR Code officiel de Pronote. Ton espace est totalement isolé et privé.
+          </p>
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div>
+                <strong>Ouvre Pronote (PC ou mobile)</strong>
+                <span>Clique sur l'icône QR Code à côté de ton nom en haut à droite.</span>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div>
+                <strong>Choisis un code PIN à 4 chiffres</strong>
+                <span>Entre ce même code dans le formulaire juste à côté.</span>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div>
+                <strong>Scanne ou importe la capture</strong>
+                <span>Ton emploi du temps, tes notes et ton coach IA s'affichent instantanément !</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-card">
+          <h2>Connexion Pronote</h2>
+          <p class="sub">Scanne ou importe ton QR Code Pronote pour démarrer.</p>
+
+          <div class="login-tabs">
+            <button class="login-tab active" id="tab-cam" onclick="setLoginMode('camera')">📷 Scanner QR</button>
+            <button class="login-tab" id="tab-img" onclick="setLoginMode('image')">🖼️ Capture d'écran</button>
+          </div>
+
+          <label class="field-label">1. Code PIN à 4 chiffres (choisi sur Pronote)</label>
+          <input type="tel" maxlength="4" id="login-pin" class="input" placeholder="Ex : 1234" />
+
+          <div id="mode-camera">
+            <label class="field-label">2. Scanne ton QR Code Pronote</label>
+            <div id="qr-reader" style="display:none;"></div>
+            <button class="btn" style="width:100%;" id="btn-start-cam" onclick="startCameraScanner()">📷 Ouvrir la caméra</button>
+          </div>
+
+          <div id="mode-image" style="display:none;">
+            <label class="field-label">2. Capture d'écran du QR Code Pronote</label>
+            <input type="file" accept="image/*" id="login-qr-file" class="input" />
+            <button class="btn" style="width:100%;" id="btn-upload-qr" onclick="loginWithQrImage()">🚀 Connecter mon Pronote</button>
+          </div>
+
+          <div id="login-status" class="status-msg"></div>
+
+          <details style="margin-top:12px;font-size:0.78rem;color:var(--muted);">
+            <summary style="cursor:pointer;">⚙️ Serveur API avancé</summary>
+            <div style="margin-top:8px;">
+              <input type="url" id="server-url-input" class="input" placeholder="https://pronote-coach.onrender.com" />
+              <button class="btn btn-sm btn-ghost" onclick="saveServerUrl()">Enregistrer</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <footer class="lp-footer">
+      🎓 <strong>Pronote Coach IA</strong> — Conçu pour t'aider à réussir ton année, sur PC et mobile.
+    </footer>
   </div>
 
   <!-- ================= MAIN APP SCREEN (PC SIDEBAR + MOBILE) ================= -->
