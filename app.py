@@ -67,12 +67,25 @@ def _session_dir(token: str) -> Path:
     return sdir
 
 
+import time
+
+_CLIENT_CACHE: dict[str, tuple[pronotepy.Client, float]] = {}
+CLIENT_TTL_SECONDS = 300
+
+
 def _save_session_creds(sdir: Path, client: pronotepy.Client) -> None:
     creds = client.export_credentials()
     (sdir / "credentials.json").write_text(json.dumps(creds, indent=2, ensure_ascii=False), encoding="utf-8")
+    _CLIENT_CACHE[sdir.name] = (client, time.monotonic())
 
 
 def _get_session_client(sdir: Path) -> pronotepy.Client:
+    cached = _CLIENT_CACHE.get(sdir.name)
+    if cached:
+        client_obj, ts = cached
+        if (time.monotonic() - ts) < CLIENT_TTL_SECONDS and getattr(client_obj, "logged_in", False):
+            return client_obj
+
     creds_path = sdir / "credentials.json"
     if not creds_path.exists():
         raise HTTPException(status_code=401, detail="Identifiants Pronote manquants. Reconnecte-toi par QR Code.")
@@ -263,27 +276,35 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
     except Exception:
         pass
 
-    # Grades & Averages (use current period, or fallback to latest period with grades when a new trimester starts)
+    # Grades & Averages — FAST: check current_period first, break on FIRST non-empty period (avoids 12 lazy HTTP calls!)
     grades_list = []
     subject_averages = {}
     active_period_name = "Trimestre en cours"
     try:
-        periods_to_check = []
-        if client.current_period:
-            periods_to_check.append(client.current_period)
-        for p in getattr(client, "periods", []) or []:
-            if p not in periods_to_check and getattr(p, "grades", None):
-                periods_to_check.append(p)
-
         chosen_period = None
-        for p in periods_to_check:
-            if getattr(p, "grades", None):
-                chosen_period = p
-                break
+        curr = client.current_period
+        if curr:
+            curr_grades = curr.grades
+            if curr_grades:
+                chosen_period = (curr, curr_grades)
+
+        if not chosen_period:
+            for p in getattr(client, "periods", []) or []:
+                if curr and p.id == curr.id:
+                    continue
+                # Prioritize Trimestre / Semestre periods first
+                pname = (getattr(p, "name", "") or "").lower()
+                if "trimestre" not in pname and "semestre" not in pname:
+                    continue
+                pg = p.grades
+                if pg:
+                    chosen_period = (p, pg)
+                    break
 
         if chosen_period:
-            active_period_name = getattr(chosen_period, "name", "Période")
-            for g in chosen_period.grades:
+            p_obj, p_grades = chosen_period
+            active_period_name = getattr(p_obj, "name", "Période")
+            for g in p_grades:
                 subj = g.subject.name if g.subject else "Autre"
                 grades_list.append({
                     "id": str(g.id),
@@ -296,7 +317,7 @@ def _sync_session_data(sdir: Path, client: pronotepy.Client, days_ahead: int = 4
                     "average": str(g.average or ""),
                     "period": active_period_name,
                 })
-            for avg in getattr(chosen_period, "averages", []) or []:
+            for avg in getattr(p_obj, "averages", []) or []:
                 subj = avg.subject.name if avg.subject else "Général"
                 subject_averages[subj] = {
                     "student": str(avg.student),
@@ -599,8 +620,14 @@ def get_me(x_session_token: str = Header(default="")):
 @app.post("/api/sync")
 def sync_me(x_session_token: str = Header(default="")):
     sdir = _session_dir(x_session_token)
-    client = _get_session_client(sdir)
-    data = _sync_session_data(sdir, client)
+    try:
+        client = _get_session_client(sdir)
+        data = _sync_session_data(sdir, client)
+    except Exception:
+        # If cached Pronote session expired server-side, evict cache and re-login cleanly once
+        _CLIENT_CACHE.pop(sdir.name, None)
+        client = _get_session_client(sdir)
+        data = _sync_session_data(sdir, client)
     tasks = json.loads((sdir / "coach_tasks.json").read_text(encoding="utf-8"))
     data["coach_tasks"] = tasks
     data["has_gemini_key"] = bool(_get_gemini_key(sdir))

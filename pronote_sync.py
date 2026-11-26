@@ -229,27 +229,34 @@ def sync_all(days_ahead: int = 28) -> dict:
     except Exception as e:
         print(f"Note: emploi du temps non disponible via PageEmploiDuTemps ({e})", file=sys.stderr)
 
-    # 3. Fetch Grades & Subject Averages (current period, or fallback to latest non-empty period like Trimestre 1)
+    # 3. Fetch Grades & Subject Averages — FAST: stop at first non-empty Trimestre/Semestre period!
     grades_list = []
     subject_averages = {}
     active_period_name = "Trimestre en cours"
     try:
-        periods_to_check = []
-        if client.current_period:
-            periods_to_check.append(client.current_period)
-        for p in getattr(client, "periods", []) or []:
-            if p not in periods_to_check and getattr(p, "grades", None):
-                periods_to_check.append(p)
-
         chosen_period = None
-        for p in periods_to_check:
-            if getattr(p, "grades", None):
-                chosen_period = p
-                break
+        curr = client.current_period
+        if curr:
+            curr_grades = curr.grades
+            if curr_grades:
+                chosen_period = (curr, curr_grades)
+
+        if not chosen_period:
+            for p in getattr(client, "periods", []) or []:
+                if curr and p.id == curr.id:
+                    continue
+                pname = (getattr(p, "name", "") or "").lower()
+                if "trimestre" not in pname and "semestre" not in pname:
+                    continue
+                pg = p.grades
+                if pg:
+                    chosen_period = (p, pg)
+                    break
 
         if chosen_period:
-            active_period_name = getattr(chosen_period, "name", "Période")
-            for g in chosen_period.grades:
+            p_obj, p_grades = chosen_period
+            active_period_name = getattr(p_obj, "name", "Période")
+            for g in p_grades:
                 subj = g.subject.name if g.subject else "Autre"
                 grades_list.append({
                     "id": str(g.id),
@@ -262,7 +269,7 @@ def sync_all(days_ahead: int = 28) -> dict:
                     "average": str(g.average or ""),
                     "period": active_period_name,
                 })
-            for avg in getattr(chosen_period, "averages", []) or []:
+            for avg in getattr(p_obj, "averages", []) or []:
                 subj = avg.subject.name if avg.subject else "Général"
                 subject_averages[subj] = {
                     "student": str(avg.student),
