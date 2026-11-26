@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Pronote Coach" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <title>Pronote Coach IA</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -546,8 +546,9 @@
   </nav>
 
   <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 
+    const DEFAULT_BACKEND_URL = 'https://pronote-coach.onrender.com';
     let appData = null;
     let selectedWeekOffset = 0;
     let currentInteractionId = null;
@@ -555,7 +556,17 @@
     let progressionChart = null;
     let averagesChart = null;
 
-    function getApiBase() { return (localStorage.getItem('pc_server_url') || '').trim().replace(/\/$/, ''); }
+    function getApiBase() {
+      const saved = (localStorage.getItem('pc_server_url') || '').trim().replace(/\/$/, '');
+      if (saved) return saved;
+      // When served from GitHub Pages (CDN instantané) or Capacitor Android, talk to the Render API
+      if (window.location.hostname.endsWith('github.io') || window.location.protocol === 'capacitor:' || (window.location.hostname === 'localhost' && window.location.port === '')) {
+        return DEFAULT_BACKEND_URL;
+      }
+      return '';
+    }
+    // Silent background wake-up ping as soon as the instant CDN page opens
+    fetch(getApiBase() + '/health').catch(() => {});
     function getToken() { return localStorage.getItem('pc_token') || ''; }
     function saveServerUrl() {
       localStorage.setItem('pc_server_url', document.getElementById('server-url-input').value.trim().replace(/\/$/, ''));

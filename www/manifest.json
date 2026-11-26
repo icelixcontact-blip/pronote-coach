@@ -2,14 +2,14 @@
   "name": "Pronote Coach IA",
   "short_name": "Pronote Coach",
   "description": "Ton prof particulier Gemini connecté à ton compte Pronote (Devoirs, Contrôles, EDT, Notes).",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0b1120",
   "theme_color": "#4f46e5",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "./icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
