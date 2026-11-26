@@ -559,8 +559,15 @@
     function getApiBase() {
       const saved = (localStorage.getItem('pc_server_url') || '').trim().replace(/\/$/, '');
       if (saved) return saved;
-      // When served from GitHub Pages (CDN instantané) or Capacitor Android, talk to the Render API
-      if (window.location.hostname.endsWith('github.io') || window.location.protocol === 'capacitor:' || (window.location.hostname === 'localhost' && window.location.port === '')) {
+      // When served from Vercel / Netlify / GitHub Pages / Capacitor Android, talk to the Render API
+      const host = window.location.hostname;
+      if (
+        host.endsWith('vercel.app') ||
+        host.endsWith('netlify.app') ||
+        host.endsWith('github.io') ||
+        window.location.protocol === 'capacitor:' ||
+        (host === 'localhost' && window.location.port === '')
+      ) {
         return DEFAULT_BACKEND_URL;
       }
       return '';
