@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import json
 import os
 import re
@@ -26,8 +27,24 @@ import pronote_sync
 BASE_DIR = Path(__file__).parent.resolve()
 WWW_DIR = BASE_DIR / "www"
 SESSIONS_DIR = BASE_DIR / "data" / "sessions"
+USERS_DIR = BASE_DIR / "data" / "users"
 SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+USERS_DIR.mkdir(parents=True, exist_ok=True)
 WWW_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
+    salt_hex = salt or secrets.token_hex(16)
+    dk = hashlib.scrypt(password.encode("utf-8"), salt=bytes.fromhex(salt_hex), n=16384, r=8, p=1)
+    return salt_hex, dk.hex()
+
+
+def _user_file(email: str) -> Path:
+    norm = email.strip().lower()
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", norm):
+        raise HTTPException(status_code=400, detail="Adresse email invalide.")
+    eh = hashlib.sha256(norm.encode("utf-8")).hexdigest()[:24]
+    return USERS_DIR / f"{eh}.json"
 
 app = FastAPI(title="Pronote Coach Multi-User API", version="2.0.0")
 
@@ -360,6 +377,17 @@ def _build_system_instruction(sdir: Path) -> str:
 
 
 # ---------- Pydantic Models ----------
+class EmailRegisterReq(BaseModel):
+    email: str
+    password: str
+    name: str = ""
+
+
+class EmailLoginReq(BaseModel):
+    email: str
+    password: str
+
+
 class QrJsonLoginReq(BaseModel):
     qr_json: str
     pin: str
@@ -392,9 +420,91 @@ def health():
     return {"status": "ok"}
 
 
-# ---------- Auth Routes (Multi-User) ----------
+# ---------- Auth Routes (Email + Password & Multi-User QR) ----------
+@app.post("/api/auth/register")
+def auth_register(req: EmailRegisterReq):
+    if len(req.password or "") < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères.")
+    uf = _user_file(req.email)
+    if uf.exists():
+        raise HTTPException(status_code=400, detail="Un compte existe déjà avec cet email. Connecte-toi !")
+
+    salt, pw_hash = _hash_password(req.password)
+    session_token = secrets.token_urlsafe(32)
+    sdir = SESSIONS_DIR / session_token
+    sdir.mkdir(parents=True, exist_ok=True)
+
+    display_name = req.name.strip() or req.email.split("@")[0].capitalize()
+    user_record = {
+        "email": req.email.strip().lower(),
+        "name": display_name,
+        "salt": salt,
+        "pw_hash": pw_hash,
+        "session_token": session_token,
+        "created_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    }
+    uf.write_text(json.dumps(user_record, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    # Initialize empty Pronote payload so the user can enter the app immediately and link Pronote inside
+    initial_data = {
+        "student": {
+            "name": display_name,
+            "email": user_record["email"],
+            "class_name": "Compte Email",
+            "establishment": "Connecte ton Pronote pour synchroniser tes cours",
+            "synced_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        },
+        "period_name": "Trimestre",
+        "pronote_linked": False,
+        "homework": [],
+        "lessons": [],
+        "grades": [],
+        "averages": {},
+    }
+    (sdir / "pronote_data.json").write_text(json.dumps(initial_data, indent=2, ensure_ascii=False), encoding="utf-8")
+    (sdir / "coach_tasks.json").write_text("[]", encoding="utf-8")
+
+    return {"ok": True, "token": session_token, "student": initial_data["student"], "pronote_linked": False}
+
+
+@app.post("/api/auth/login")
+def auth_login(req: EmailLoginReq):
+    uf = _user_file(req.email)
+    if not uf.exists():
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect.")
+    user_record = json.loads(uf.read_text(encoding="utf-8"))
+    _, check_hash = _hash_password(req.password, salt=user_record["salt"])
+    if not secrets.compare_digest(check_hash, user_record["pw_hash"]):
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect.")
+
+    token = user_record["session_token"]
+    sdir = SESSIONS_DIR / token
+    if not sdir.exists():
+        sdir.mkdir(parents=True, exist_ok=True)
+        initial_data = {
+            "student": {
+                "name": user_record.get("name", "Élève"),
+                "email": user_record["email"],
+                "class_name": "Compte Email",
+                "establishment": "Connecte ton Pronote pour synchroniser tes cours",
+                "synced_at": datetime.datetime.now().isoformat(timespec="seconds"),
+            },
+            "period_name": "Trimestre",
+            "pronote_linked": False,
+            "homework": [],
+            "lessons": [],
+            "grades": [],
+            "averages": {},
+        }
+        (sdir / "pronote_data.json").write_text(json.dumps(initial_data, indent=2, ensure_ascii=False), encoding="utf-8")
+        (sdir / "coach_tasks.json").write_text("[]", encoding="utf-8")
+
+    data = json.loads((sdir / "pronote_data.json").read_text(encoding="utf-8"))
+    return {"ok": True, "token": token, "student": data.get("student", {}), "pronote_linked": (sdir / "credentials.json").exists()}
+
+
 @app.post("/api/auth/qr-json")
-def auth_qr_json(req: QrJsonLoginReq):
+def auth_qr_json(req: QrJsonLoginReq, x_session_token: str = Header(default="")):
     try:
         qr_dict = json.loads(req.qr_json)
         device_uuid = str(uuid.uuid4())
@@ -406,12 +516,15 @@ def auth_qr_json(req: QrJsonLoginReq):
         )
         if not client.logged_in:
             raise HTTPException(status_code=400, detail="Connexion Pronote refusée. Vérifie ton code PIN à 4 chiffres et que le QR code n'a pas déjà été utilisé.")
-        token = secrets.token_urlsafe(32)
+        if x_session_token and (SESSIONS_DIR / x_session_token).exists():
+            token = x_session_token
+        else:
+            token = secrets.token_urlsafe(32)
         sdir = SESSIONS_DIR / token
         sdir.mkdir(parents=True, exist_ok=True)
         _save_session_creds(sdir, client)
         data = _sync_session_data(sdir, client)
-        return {"ok": True, "token": token, "student": data["student"]}
+        return {"ok": True, "token": token, "student": data["student"], "pronote_linked": True}
     except HTTPException:
         raise
     except Exception as e:
@@ -419,7 +532,7 @@ def auth_qr_json(req: QrJsonLoginReq):
 
 
 @app.post("/api/auth/qr-image")
-async def auth_qr_image(pin: str = Form(...), file: UploadFile = File(...)):
+async def auth_qr_image(pin: str = Form(...), file: UploadFile = File(...), x_session_token: str = Header(default="")):
     tmp_path = None
     try:
         suffix = Path(file.filename or "qr.png").suffix or ".png"
@@ -436,12 +549,15 @@ async def auth_qr_image(pin: str = Form(...), file: UploadFile = File(...)):
         )
         if not client.logged_in:
             raise HTTPException(status_code=400, detail="Connexion Pronote refusée. Vérifie le code PIN à 4 chiffres.")
-        token = secrets.token_urlsafe(32)
+        if x_session_token and (SESSIONS_DIR / x_session_token).exists():
+            token = x_session_token
+        else:
+            token = secrets.token_urlsafe(32)
         sdir = SESSIONS_DIR / token
         sdir.mkdir(parents=True, exist_ok=True)
         _save_session_creds(sdir, client)
         data = _sync_session_data(sdir, client)
-        return {"ok": True, "token": token, "student": data["student"]}
+        return {"ok": True, "token": token, "student": data["student"], "pronote_linked": True}
     except HTTPException:
         raise
     except Exception as e:
@@ -453,8 +569,18 @@ async def auth_qr_image(pin: str = Form(...), file: UploadFile = File(...)):
 
 @app.post("/api/logout")
 def logout(x_session_token: str = Header(default="")):
+    # Only delete ephemeral QR-only sessions; keep email-linked sessions intact on server so user can log back in!
     sdir = _session_dir(x_session_token)
-    shutil.rmtree(sdir, ignore_errors=True)
+    is_email_user = False
+    for uf in USERS_DIR.glob("*.json"):
+        try:
+            if json.loads(uf.read_text(encoding="utf-8")).get("session_token") == x_session_token:
+                is_email_user = True
+                break
+        except Exception:
+            pass
+    if not is_email_user:
+        shutil.rmtree(sdir, ignore_errors=True)
     return {"ok": True}
 
 
@@ -466,6 +592,7 @@ def get_me(x_session_token: str = Header(default="")):
     tasks = json.loads((sdir / "coach_tasks.json").read_text(encoding="utf-8")) if (sdir / "coach_tasks.json").exists() else []
     data["coach_tasks"] = tasks
     data["has_gemini_key"] = bool(_get_gemini_key(sdir))
+    data["pronote_linked"] = (sdir / "credentials.json").exists()
     return data
 
 
