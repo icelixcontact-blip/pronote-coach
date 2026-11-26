@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pronote-coach-v3';
+const CACHE_NAME = 'pronote-coach-v4';
 const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', (e) => {

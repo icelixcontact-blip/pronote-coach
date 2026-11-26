@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Pronote Coach" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
@@ -14,325 +14,356 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg: #0b1120;
-      --card: #162033;
-      --card2: #1e293b;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #6366f1;
-      --accent2: #8b5cf6;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f9;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #4f46e5;
+      --accent2: #7c3aed;
       --critical: #ef4444;
       --high: #f59e0b;
       --ok: #10b981;
-      --border: #283548;
+      --border: #e2e8f0;
+      --shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 50px -15px rgba(79, 70, 229, 0.14);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
       min-height: 100dvh;
+      overflow-x: hidden;
     }
+
     .btn {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white;
+      color: #fff;
       border: none;
-      padding: 10px 16px;
-      border-radius: 11px;
+      padding: 11px 18px;
+      border-radius: 12px;
       font-weight: 600;
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: transform 0.12s, opacity 0.2s;
+      font-size: 0.92rem;
+      transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 6px 18px -4px rgba(79, 70, 229, 0.35);
     }
+    .btn:hover { opacity: 0.94; transform: translateY(-1px); }
     .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .btn-ghost { background: rgba(148, 163, 184, 0.12); border: 1px solid var(--border); color: var(--text); }
-    .btn-ghost.active-pill { background: rgba(99, 102, 241, 0.28); border-color: var(--accent); color: #fff; }
-    .btn-danger { background: rgba(239, 68, 68, 0.18); border: 1px solid #ef4444; color: #fca5a5; }
-    .btn-sm { padding: 7px 12px; font-size: 0.8rem; border-radius: 9px; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: none;
+    }
+    .btn-ghost:hover { background: var(--surface-soft); }
+    .btn-ghost.active-pill {
+      background: #eef2ff;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-danger {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      box-shadow: none;
+    }
+    .btn-sm { padding: 7px 12px; font-size: 0.82rem; border-radius: 10px; }
 
-    /* ---------- LOGIN SCREEN ---------- */
+    /* ============================================================
+       LOGIN / LANDING PAGE — WHITE WITH FLOATING SUBJECT ICONS
+       ============================================================ */
     #login-screen {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 28px 18px 40px;
+      min-height: 100dvh;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(99, 102, 241, 0.08), transparent 42%),
+        radial-gradient(circle at 82% 78%, rgba(124, 58, 237, 0.07), transparent 45%),
+        #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .landing-wrap {
+      width: 100%;
+      max-width: 1120px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.9fr;
+      gap: 48px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    @media (max-width: 900px) {
+      .landing-wrap { grid-template-columns: 1fr; gap: 22px; max-width: 480px; }
+    }
+
+    /* Hero Stage with Floating Icons around "Pronote Coach IA" */
+    .hero-stage {
+      position: relative;
+      min-height: 430px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
-    }
-    .hero {
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      padding: 24px 16px;
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.12));
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      border-radius: 22px;
+      padding: 40px 24px;
     }
-    .hero .emoji { font-size: 3rem; margin-bottom: 8px; }
-    .hero h1 { font-size: 1.55rem; font-weight: 800; }
-    .hero p { color: var(--muted); font-size: 0.92rem; margin-top: 6px; }
+    @media (max-width: 900px) {
+      .hero-stage { min-height: 270px; padding: 36px 10px 18px; }
+    }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+    .hero-core {
+      position: relative;
+      z-index: 3;
+      max-width: 420px;
     }
-    .field-label { font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; display: block; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eef2ff;
+      color: var(--accent);
+      border: 1px solid #c7d2fe;
+      padding: 5px 13px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .hero-core h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      background: linear-gradient(135deg, #0f172a 20%, #4f46e5 75%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .hero-core p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 380px;
+      margin: 0 auto 18px;
+    }
+    .hero-pills {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-pill {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #334155;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    /* Floating Subject Bubbles */
+    .float-icon {
+      position: absolute;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 9px 13px;
+      box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.12);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #1e293b;
+      user-select: none;
+      pointer-events: none;
+      animation: floatSlow 7s ease-in-out infinite;
+    }
+    .float-icon .ic { font-size: 1.25rem; line-height: 1; }
+    @media (max-width: 900px) {
+      .float-icon { padding: 6px 9px; font-size: 0.7rem; border-radius: 12px; }
+      .float-icon .ic { font-size: 1rem; }
+      .float-icon.hide-sm { display: none; }
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-13px) rotate(2deg); }
+    }
+    @keyframes floatSlowAlt {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(12px) rotate(-2deg); }
+    }
+
+    .fi-maths    { top: 4%;    left: 6%;   animation-duration: 6.8s; animation-delay: 0s;   border-color: #c7d2fe; }
+    .fi-physique { top: 8%;    right: 6%;  animation-name: floatSlowAlt; animation-duration: 7.5s; animation-delay: 0.6s; border-color: #bae6fd; }
+    .fi-francais { bottom: 12%; left: 3%;  animation-duration: 8.2s; animation-delay: 1.2s; border-color: #fecdd3; }
+    .fi-anglais  { bottom: 8%;  right: 5%; animation-name: floatSlowAlt; animation-duration: 7.1s; animation-delay: 0.9s; border-color: #fde68a; }
+    .fi-histoire { top: 44%;   left: -2%;  animation-duration: 8.8s; animation-delay: 1.8s; border-color: #bbf7d0; }
+    .fi-espagnol { top: 45%;   right: -1%; animation-name: floatSlowAlt; animation-duration: 7.9s; animation-delay: 1.5s; border-color: #fed7aa; }
+    .fi-svt      { bottom: 0%;  left: 38%; animation-duration: 9.0s; animation-delay: 0.3s; border-color: #a7f3d0; }
+
+    /* Login Card */
+    .login-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 26px;
+      box-shadow: var(--shadow-lg);
+    }
+    .login-card h2 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .login-card .sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 18px; }
+
+    .field-label { font-size: 0.84rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block; }
     .input, select.input {
       width: 100%;
-      background: #0b1120;
+      background: #f8fafc;
       border: 1px solid var(--border);
-      color: white;
-      padding: 11px 13px;
+      color: var(--text);
+      padding: 11px 14px;
       border-radius: 12px;
       font-size: 15px;
       margin-bottom: 12px;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .input:focus { outline: none; border-color: var(--accent); }
+    .input:focus { outline: none; border-color: var(--accent); background: #ffffff; }
     .login-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
     .login-tab {
       padding: 10px;
-      border-radius: 11px;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      background: #0b1120;
+      background: #f8fafc;
       color: var(--muted);
       font-weight: 600;
       cursor: pointer;
       font-size: 0.86rem;
     }
-    .login-tab.active { background: rgba(99, 102, 241, 0.2); border-color: var(--accent); color: white; }
-    #qr-reader { width: 100%; border-radius: 14px; overflow: hidden; margin-bottom: 12px; background: #000; }
-    .status-msg { padding: 11px 14px; border-radius: 12px; font-size: 0.86rem; margin-top: 10px; display: none; }
-    .status-msg.err { display: block; background: rgba(239, 68, 68, 0.16); border: 1px solid #ef4444; color: #fca5a5; }
-    .status-msg.ok { display: block; background: rgba(16, 185, 129, 0.16); border: 1px solid #10b981; color: #6ee7b7; }
+    .login-tab.active { background: #eef2ff; border-color: var(--accent); color: var(--accent); }
+    #qr-reader { width: 100%; border-radius: 14px; overflow: hidden; margin-bottom: 12px; background: #0f172a; }
+    .status-msg { padding: 11px 14px; border-radius: 12px; font-size: 0.85rem; margin-top: 10px; display: none; }
+    .status-msg.err { display: block; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    .status-msg.ok { display: block; background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; }
 
-    /* ---------- MAIN APP SCREEN ---------- */
-    #app-screen { display: none; padding: 16px; padding-bottom: 88px; max-width: 1440px; margin: 0 auto; }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: linear-gradient(135deg, #1e1b4b, #162033);
-      padding: 14px 18px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      margin-bottom: 14px;
-      gap: 12px;
-      flex-wrap: wrap;
+    /* ============================================================
+       MAIN APP SHELL — PC SIDEBAR + MOBILE BOTTOM BAR (LIGHT THEME)
+       ============================================================ */
+    #app-screen { display: none; min-height: 100dvh; }
+    .app-shell {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100dvh;
     }
-    .hdr-title h1 { font-size: 1.15rem; font-weight: 700; }
-    .hdr-title p { color: var(--muted); font-size: 0.8rem; }
-
-    /* Desktop Top Tabs */
-    .desktop-nav {
+    .sidebar {
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
       display: flex;
-      gap: 8px;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px 18px;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 16px;
-      flex-wrap: wrap;
     }
-    .dnav-btn {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.9rem;
+    .brand-icon {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center; font-size: 1.25rem; color: white;
+    }
+    .brand-txt strong { display: block; font-size: 0.98rem; line-height: 1.2; }
+    .brand-txt span { font-size: 0.74rem; color: var(--muted); }
+
+    .side-nav { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .snav-btn {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      text-align: left;
       transition: all 0.15s;
     }
-    .dnav-btn.active {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white;
-      border-color: transparent;
-    }
+    .snav-btn:hover { background: var(--surface-soft); color: var(--text); }
+    .snav-btn.active { background: #eef2ff; color: var(--accent); }
 
-    .tab-section { display: none; }
-    .tab-section.active { display: block; }
-
-    .two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; align-items: start; }
-    @media (max-width: 960px) { .two-col { grid-template-columns: 1fr; } }
-
-    .card h2 {
-      font-size: 1.05rem;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 9px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    /* Tasks */
-    .task-item {
-      display: flex;
-      gap: 11px;
-      padding: 11px;
-      border-radius: 12px;
-      background: rgba(11, 17, 32, 0.6);
-      border: 1px solid var(--border);
-      margin-bottom: 9px;
-    }
-    .task-item.done { opacity: 0.45; }
-    .task-item.done .task-title { text-decoration: line-through; }
-    .task-checkbox { width: 20px; height: 20px; margin-top: 3px; cursor: pointer; accent-color: var(--ok); flex-shrink: 0; }
-    .task-body { flex: 1; }
-    .task-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
-    .badge { font-size: 0.69rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; }
-    .badge.critical { background: rgba(239, 68, 68, 0.22); color: #fca5a5; border: 1px solid #ef4444; }
-    .badge.high { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid #f59e0b; }
-    .badge.normal, .badge.medium { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid #6366f1; }
-    .badge.ok { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
-    .task-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; }
-    .task-desc { color: var(--muted); font-size: 0.82rem; white-space: pre-line; }
-
-    /* ---------- WEEKLY TIMETABLE GRID ---------- */
-    .edt-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .edt-legend {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-    .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
-
-    .week-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(195px, 1fr));
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-    }
-    .day-col {
-      background: rgba(11, 17, 32, 0.65);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px;
-      min-height: 260px;
+    .side-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-    .day-col.today-col {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35);
-    }
-    .day-header {
-      text-align: center;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-      font-weight: 700;
-      font-size: 0.9rem;
-    }
-    .day-header span { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 500; }
-
-    .slot {
-      padding: 9px 10px;
-      border-radius: 11px;
-      background: rgba(30, 41, 59, 0.85);
-      border-left: 4px solid var(--accent);
-      font-size: 0.81rem;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .slot.eval {
-      background: rgba(239, 68, 68, 0.22);
-      border: 1.5px solid #ef4444;
-      border-left: 5px solid #ef4444;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
-    }
-    .slot.canceled {
-      background: rgba(51, 65, 85, 0.35);
-      border-left-color: #64748b;
-      opacity: 0.58;
-    }
-    .slot.canceled .slot-subj { text-decoration: line-through; }
-    .slot-time { font-size: 0.74rem; font-weight: 700; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
-    .slot-subj { font-weight: 700; font-size: 0.85rem; color: #fff; }
-    .slot-meta { font-size: 0.73rem; color: var(--muted); }
-    .eval-pill {
-      display: inline-block;
-      background: #ef4444;
-      color: #fff;
-      font-size: 0.66rem;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 6px;
-      margin-top: 3px;
-      width: fit-content;
-      letter-spacing: 0.3px;
-    }
-
-    /* ---------- GRADES & CHARTS ---------- */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    @media (max-width: 640px) { .kpi-row { grid-template-columns: 1fr; } }
-    .kpi-card {
-      background: rgba(11, 17, 32, 0.65);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-    }
-    .kpi-label { font-size: 0.78rem; color: var(--muted); }
-    .kpi-val { font-size: 1.65rem; font-weight: 800; margin-top: 2px; }
-    .chart-box { position: relative; height: 290px; width: 100%; }
-
-    .grade-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .student-pill {
+      background: var(--surface-soft);
       padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(11, 17, 32, 0.55);
-      border: 1px solid rgba(51, 65, 85, 0.5);
-      margin-bottom: 7px;
-      font-size: 0.86rem;
-      gap: 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
     }
-    .grade-score { font-weight: 800; font-size: 1rem; white-space: nowrap; }
+    .student-pill strong { display: block; color: var(--text); font-size: 0.86rem; }
+    .student-pill span { color: var(--muted); }
 
-    /* ---------- CHAT ---------- */
-    .chat-card { display: flex; flex-direction: column; height: calc(100vh - 185px); min-height: 460px; }
-    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding-right: 4px; }
-    .msg { padding: 11px 14px; border-radius: 14px; font-size: 0.92rem; white-space: pre-wrap; max-width: 88%; }
-    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-    .msg.bot { background: rgba(11, 17, 32, 0.85); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-    .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
-    .chip { background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.4); color: #c7d2fe; padding: 6px 11px; border-radius: 999px; font-size: 0.78rem; cursor: pointer; }
-    .chat-input-row { display: flex; gap: 8px; }
-    .chat-input-row input { flex: 1; background: #0b1120; border: 1px solid var(--border); color: white; padding: 11px 13px; border-radius: 12px; font-size: 16px; }
+    .main-area {
+      padding: 22px 26px 40px;
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
-    /* Bottom Mobile Nav */
+    /* Mobile Header (hidden on PC) */
+    .mobile-header { display: none; }
     .mobile-nav { display: none; }
+
     @media (max-width: 900px) {
-      #app-screen { padding: 10px; padding-bottom: 84px; }
-      .desktop-nav { display: none; }
-      .chat-card { height: calc(100dvh - 175px); min-height: 360px; }
+      .app-shell { display: block; }
+      .sidebar { display: none; }
+      .main-area { padding: 12px 12px 86px; }
+      .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        box-shadow: var(--shadow);
+      }
+      .mobile-header h1 { font-size: 1.02rem; font-weight: 800; }
+      .mobile-header p { font-size: 0.74rem; color: var(--muted); }
       .mobile-nav {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         position: fixed;
         bottom: 0; left: 0; right: 0;
-        background: rgba(11, 17, 32, 0.97);
+        background: rgba(255, 255, 255, 0.96);
         backdrop-filter: blur(12px);
         border-top: 1px solid var(--border);
         padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
@@ -343,197 +374,390 @@
         display: flex; flex-direction: column; align-items: center; gap: 2px;
         font-size: 0.68rem; font-weight: 600; cursor: pointer; padding: 3px;
       }
-      .nav-btn.active { color: #818cf8; }
+      .nav-btn.active { color: var(--accent); }
       .nav-icon { font-size: 1.2rem; }
     }
+
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; align-items: start; }
+    @media (max-width: 960px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ---------- WEEKLY TIMETABLE (LIGHT) ---------- */
+    .edt-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+    }
+    .edt-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); }
+    .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(185px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .day-col {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .day-col.today-col {
+      background: #eef2ff55;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.2);
+    }
+    .day-header {
+      text-align: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .day-header span { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 500; }
+    .slot {
+      padding: 9px 10px;
+      border-radius: 11px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      font-size: 0.81rem;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+    .slot.eval {
+      background: #fef2f2;
+      border: 1.5px solid #ef4444;
+      border-left: 5px solid #dc2626;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.16);
+    }
+    .slot.canceled { background: #f1f5f9; border-left-color: #94a3b8; opacity: 0.62; }
+    .slot.canceled .slot-subj { text-decoration: line-through; }
+    .slot-time { font-size: 0.73rem; font-weight: 700; color: #475569; display: flex; justify-content: space-between; }
+    .slot-subj { font-weight: 700; font-size: 0.84rem; color: var(--text); }
+    .slot-meta { font-size: 0.72rem; color: var(--muted); }
+    .eval-pill {
+      display: inline-block; background: #dc2626; color: #fff;
+      font-size: 0.65rem; font-weight: 800; padding: 2px 6px;
+      border-radius: 6px; margin-top: 3px; width: fit-content;
+    }
+
+    /* ---------- GRADES & CHARTS (LIGHT) ---------- */
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+    @media (max-width: 640px) { .kpi-row { grid-template-columns: 1fr; } }
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+    .kpi-val { font-size: 1.6rem; font-weight: 800; margin-top: 3px; }
+    .chart-box { position: relative; height: 290px; width: 100%; }
+    .grade-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; border-radius: 11px;
+      background: #f8fafc; border: 1px solid var(--border);
+      margin-bottom: 7px; font-size: 0.86rem; gap: 10px;
+    }
+    .grade-score { font-weight: 800; font-size: 1rem; white-space: nowrap; }
+
+    /* ---------- TASKS (LIGHT) ---------- */
+    .task-item {
+      display: flex; gap: 11px; padding: 12px; border-radius: 12px;
+      background: #f8fafc; border: 1px solid var(--border); margin-bottom: 9px;
+    }
+    .task-item.done { opacity: 0.5; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-checkbox { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; accent-color: var(--ok); flex-shrink: 0; }
+    .task-body { flex: 1; }
+    .task-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
+    .badge { font-size: 0.69rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
+    .badge.critical { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge.high { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .badge.normal, .badge.medium { background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; }
+    .badge.ok { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .task-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; }
+    .task-desc { color: var(--muted); font-size: 0.82rem; white-space: pre-line; }
+
+    /* ---------- CHAT (LIGHT) ---------- */
+    .chat-card { display: flex; flex-direction: column; height: calc(100vh - 90px); min-height: 460px; }
+    @media (max-width: 900px) { .chat-card { height: calc(100dvh - 175px); min-height: 360px; } }
+    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding-right: 4px; }
+    .msg { padding: 11px 14px; border-radius: 14px; font-size: 0.92rem; white-space: pre-wrap; max-width: 85%; }
+    .msg.user { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.bot { background: #f1f5f9; border: 1px solid var(--border); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .chip { background: #eef2ff; border: 1px solid #c7d2fe; color: var(--accent); padding: 6px 11px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+    .chip:hover { background: #e0e7ff; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; background: #f8fafc; border: 1px solid var(--border); color: var(--text); padding: 11px 14px; border-radius: 12px; font-size: 16px; }
+    .chat-input-row input:focus { outline: none; border-color: var(--accent); background: #fff; }
   </style>
 </head>
 <body>
-  <!-- ================= LOGIN SCREEN ================= -->
+  <!-- ================= WHITE LANDING / LOGIN SCREEN ================= -->
   <div id="login-screen">
-    <div class="hero">
-      <div class="emoji">🎓</div>
-      <h1>Pronote Coach IA</h1>
-      <p>Emploi du temps visuel, alertes évaluations en rouge, graphiques de progression des notes et Prof Particulier Gemini.</p>
-    </div>
+    <div class="landing-wrap">
+      <!-- Left: Hero + Slowly Floating Subject Icons -->
+      <div class="hero-stage">
+        <div class="float-icon fi-maths"><span class="ic">📐</span><span>Maths</span></div>
+        <div class="float-icon fi-physique"><span class="ic">🧪</span><span>Physique</span></div>
+        <div class="float-icon fi-francais"><span class="ic">✒️</span><span>Français</span></div>
+        <div class="float-icon fi-anglais"><span class="ic">🇬🇧</span><span>Anglais</span></div>
+        <div class="float-icon fi-histoire hide-sm"><span class="ic">🌍</span><span>Histoire-Géo</span></div>
+        <div class="float-icon fi-espagnol hide-sm"><span class="ic">🇪🇸</span><span>Espagnol</span></div>
+        <div class="float-icon fi-svt hide-sm"><span class="ic">🧬</span><span>Sciences</span></div>
 
-    <div class="card">
-      <div class="login-tabs">
-        <button class="login-tab active" id="tab-cam" onclick="setLoginMode('camera')">📷 Scanner QR</button>
-        <button class="login-tab" id="tab-img" onclick="setLoginMode('image')">🖼️ Capture d'écran</button>
-      </div>
-
-      <label class="field-label">1. Code PIN à 4 chiffres (choisi sur Pronote)</label>
-      <input type="tel" maxlength="4" id="login-pin" class="input" placeholder="Ex : 1234" />
-
-      <div id="mode-camera">
-        <label class="field-label">2. Scanne ton QR Code Pronote</label>
-        <div id="qr-reader" style="display:none;"></div>
-        <button class="btn" style="width:100%;" id="btn-start-cam" onclick="startCameraScanner()">📷 Ouvrir la caméra</button>
-      </div>
-
-      <div id="mode-image" style="display:none;">
-        <label class="field-label">2. Choisis la capture d'écran de ton QR Code Pronote</label>
-        <input type="file" accept="image/*" id="login-qr-file" class="input" />
-        <button class="btn" style="width:100%;" id="btn-upload-qr" onclick="loginWithQrImage()">🚀 Connecter mon Pronote</button>
-      </div>
-
-      <div id="login-status" class="status-msg"></div>
-
-      <details style="margin-top:14px;font-size:0.8rem;color:var(--muted);">
-        <summary style="cursor:pointer;">⚙️ Serveur API (pour l'APK Android)</summary>
-        <div style="margin-top:8px;">
-          <input type="url" id="server-url-input" class="input" placeholder="https://pronote-coach.onrender.com" />
-          <button class="btn btn-sm btn-ghost" onclick="saveServerUrl()">Enregistrer</button>
+        <div class="hero-core">
+          <div class="hero-badge">✨ Ton Prof Particulier IA • PC & Mobile</div>
+          <h1>Pronote Coach IA</h1>
+          <p>Organise tes devoirs, repère tes évaluations en rouge sur ton emploi du temps, suis ta progression en graphiques et révise avec ton Coach IA.</p>
+          <div class="hero-pills">
+            <span class="hero-pill">🔴 Évals en rouge</span>
+            <span class="hero-pill">📈 Courbes de notes</span>
+            <span class="hero-pill">💬 Coach Gemini</span>
+          </div>
         </div>
-      </details>
+      </div>
+
+      <!-- Right: Clean White Pronote QR Login Card -->
+      <div class="login-card">
+        <h2>Connexion Pronote</h2>
+        <p class="sub">Scanne ou importe ton QR Code Pronote en 15 secondes.</p>
+
+        <div class="login-tabs">
+          <button class="login-tab active" id="tab-cam" onclick="setLoginMode('camera')">📷 Scanner QR</button>
+          <button class="login-tab" id="tab-img" onclick="setLoginMode('image')">🖼️ Capture d'écran</button>
+        </div>
+
+        <label class="field-label">1. Code PIN à 4 chiffres (choisi sur Pronote)</label>
+        <input type="tel" maxlength="4" id="login-pin" class="input" placeholder="Ex : 1234" />
+
+        <div id="mode-camera">
+          <label class="field-label">2. Scanne ton QR Code Pronote</label>
+          <div id="qr-reader" style="display:none;"></div>
+          <button class="btn" style="width:100%;" id="btn-start-cam" onclick="startCameraScanner()">📷 Ouvrir la caméra</button>
+        </div>
+
+        <div id="mode-image" style="display:none;">
+          <label class="field-label">2. Capture d'écran du QR Code Pronote</label>
+          <input type="file" accept="image/*" id="login-qr-file" class="input" />
+          <button class="btn" style="width:100%;" id="btn-upload-qr" onclick="loginWithQrImage()">🚀 Connecter mon Pronote</button>
+        </div>
+
+        <div id="login-status" class="status-msg"></div>
+
+        <details style="margin-top:14px;font-size:0.78rem;color:var(--muted);">
+          <summary style="cursor:pointer;">Comment trouver mon QR Code Pronote ?</summary>
+          <p style="margin-top:6px;">Sur Pronote (PC ou mobile), clique sur l'icône <strong>QR Code</strong> à côté de ton nom, choisis un code à 4 chiffres, puis scanne ou importe l'image ici.</p>
+        </details>
+
+        <details style="margin-top:8px;font-size:0.78rem;color:var(--muted);">
+          <summary style="cursor:pointer;">⚙️ Serveur API avancé</summary>
+          <div style="margin-top:8px;">
+            <input type="url" id="server-url-input" class="input" placeholder="https://pronote-coach.onrender.com" />
+            <button class="btn btn-sm btn-ghost" onclick="saveServerUrl()">Enregistrer</button>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 
-  <!-- ================= MAIN APP SCREEN ================= -->
+  <!-- ================= MAIN APP SCREEN (PC SIDEBAR + MOBILE) ================= -->
   <div id="app-screen">
-    <header>
-      <div class="hdr-title">
-        <h1 id="student-name">🎓 Pronote Coach</h1>
-        <p id="sync-status">Chargement...</p>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-sm" onclick="syncPronote()" id="sync-btn">🔄 Synchro</button>
-      </div>
-    </header>
+    <div class="app-shell">
+      <!-- PC Left Sidebar -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-icon">🎓</div>
+          <div class="brand-txt">
+            <strong>Pronote Coach IA</strong>
+            <span>Espace Élève</span>
+          </div>
+        </div>
 
-    <!-- Desktop Top Navigation -->
-    <div class="desktop-nav">
-      <button class="dnav-btn active" data-tab="edt" onclick="switchTab('edt')">🗓️ Emploi du Temps</button>
-      <button class="dnav-btn" data-tab="notes" onclick="switchTab('notes')">📊 Notes & Graphiques</button>
-      <button class="dnav-btn" data-tab="todo" onclick="switchTab('todo')">✅ To-Do & Devoirs</button>
-      <button class="dnav-btn" data-tab="chat" onclick="switchTab('chat')">💬 Prof Particulier IA</button>
-      <button class="dnav-btn" data-tab="profile" onclick="switchTab('profile')">⚙️ Compte</button>
+        <nav class="side-nav">
+          <button class="snav-btn active" data-tab="edt" onclick="switchTab('edt')">🗓️ Emploi du Temps</button>
+          <button class="snav-btn" data-tab="notes" onclick="switchTab('notes')">📊 Notes & Graphiques</button>
+          <button class="snav-btn" data-tab="todo" onclick="switchTab('todo')">✅ To-Do & Devoirs</button>
+          <button class="snav-btn" data-tab="chat" onclick="switchTab('chat')">💬 Prof Particulier IA</button>
+          <button class="snav-btn" data-tab="profile" onclick="switchTab('profile')">⚙️ Compte & Clé IA</button>
+        </nav>
+
+        <div class="side-footer">
+          <div class="student-pill">
+            <strong id="side-student-name">Élève</strong>
+            <span id="side-sync-status">Chargement...</span>
+          </div>
+          <button class="btn btn-sm" style="width:100%;" onclick="syncPronote()" id="sync-btn-pc">🔄 Synchroniser Pronote</button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-area">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+          <div>
+            <h1 id="student-name">🎓 Pronote Coach</h1>
+            <p id="sync-status">Chargement...</p>
+          </div>
+          <button class="btn btn-sm" onclick="syncPronote()" id="sync-btn">🔄 Synchro</button>
+        </div>
+
+        <!-- TAB 1: WEEKLY TIMETABLE -->
+        <section id="sec-edt" class="tab-section active">
+          <div class="card">
+            <div class="edt-toolbar">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <button class="btn btn-sm btn-ghost active-pill" id="btn-week-0" onclick="selectWeek(0)">📅 Cette semaine</button>
+                <button class="btn btn-sm btn-ghost" id="btn-week-1" onclick="selectWeek(1)">➡️ Semaine prochaine</button>
+                <span id="week-range-label" style="font-size:0.85rem;color:var(--muted);font-weight:600;"></span>
+              </div>
+              <div class="edt-legend">
+                <span><i class="legend-dot" style="background:#ef4444;"></i>Évaluation / Contrôle / CCF</span>
+                <span><i class="legend-dot" style="background:#4f46e5;"></i>Cours normal</span>
+                <span><i class="legend-dot" style="background:#94a3b8;"></i>Cours annulé</span>
+              </div>
+            </div>
+            <div class="week-grid" id="week-grid"></div>
+          </div>
+        </section>
+
+        <!-- TAB 2: GRADES & PROGRESSION CHARTS -->
+        <section id="sec-notes" class="tab-section">
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">Moyenne Générale (<span id="kpi-period">Trimestre</span>)</div>
+              <div class="kpi-val" id="kpi-avg" style="color:#4f46e5;">—</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Meilleure matière</div>
+              <div class="kpi-val" id="kpi-best" style="color:#059669;font-size:1.2rem;">—</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Matière à prioriser</div>
+              <div class="kpi-val" id="kpi-worst" style="color:#dc2626;font-size:1.2rem;">—</div>
+            </div>
+          </div>
+
+          <div class="two-col" style="margin-bottom:18px;">
+            <div class="card">
+              <h2>
+                <span>📈 Courbe de Progression (/20)</span>
+                <select id="subject-filter" class="input" style="width:auto;margin:0;padding:5px 10px;font-size:0.82rem;" onchange="renderProgressionChart()">
+                  <option value="ALL">Toutes les matières</option>
+                </select>
+              </h2>
+              <div class="chart-box"><canvas id="chart-progression"></canvas></div>
+            </div>
+
+            <div class="card">
+              <h2>📊 Moyennes par Matière (Toi vs Classe)</h2>
+              <div class="chart-box"><canvas id="chart-averages"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>🧾 Historique détaillé des Notes</h2>
+            <div id="grades-detail-list"></div>
+          </div>
+        </section>
+
+        <!-- TAB 3: TO-DO & DEVOIRS -->
+        <section id="sec-todo" class="tab-section">
+          <div class="two-col">
+            <div class="card">
+              <h2>
+                <span>📋 Super To-Do Coach</span>
+                <span id="coach-progress" style="font-size:0.82rem;color:var(--muted)"></span>
+              </h2>
+              <div style="display:flex;gap:6px;margin-bottom:12px;">
+                <input type="text" id="new-task-subject" class="input" style="margin:0;width:32%;padding:8px 10px;font-size:14px;" placeholder="Matière" />
+                <input type="text" id="new-task-title" class="input" style="margin:0;flex:1;padding:8px 10px;font-size:14px;" placeholder="Ajouter une révision..." onkeydown="if(event.key==='Enter') addCustomTask()" />
+                <button class="btn btn-sm" onclick="addCustomTask()">+</button>
+              </div>
+              <div id="coach-list"></div>
+            </div>
+
+            <div class="card">
+              <h2>📚 Devoirs & Contrôles Pronote</h2>
+              <div id="hw-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: AI COACH CHAT -->
+        <section id="sec-chat" class="tab-section">
+          <div class="card chat-card">
+            <h2>
+              <span>✨ Ton Prof Particulier Gemini</span>
+              <button class="btn btn-sm btn-ghost" onclick="resetChat()">Nouveau chat</button>
+            </h2>
+
+            <div id="key-banner" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px;margin-bottom:10px;font-size:0.82rem;color:#92400e;">
+              🔑 Ajoute une clé gratuite <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#b45309;font-weight:700;">Google AI Studio</a> dans <strong>⚙️ Compte</strong> pour activer le chat !
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+              <div class="msg bot">Salut ! 👋 Je vois ton emploi du temps, tes évaluations en rouge et toutes tes notes. Comment puis-je t'aider aujourd'hui ?</div>
+            </div>
+
+            <div class="quick-chips">
+              <button class="chip" onclick="quickAsk('Analyse ma progression de notes et dis-moi quelles matières bosser en priorité')">📈 Analyser mes notes</button>
+              <button class="chip" onclick="quickAsk('Quelles sont mes prochaines évaluations et comment les réviser jour par jour ?')">🚨 Plan évaluations</button>
+              <button class="chip" onclick="quickAsk('Fais-moi un quiz rapide sur mon prochain contrôle')">🧠 Quiz rapide</button>
+            </div>
+
+            <div class="chat-input-row">
+              <input type="text" id="chat-input" placeholder="Pose ta question à ton Coach..." onkeydown="if(event.key==='Enter') sendMessage()" />
+              <button class="btn" onclick="sendMessage()">➤</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: PROFILE -->
+        <section id="sec-profile" class="tab-section">
+          <div class="card" style="max-width:540px;">
+            <h2>⚙️ Mon Compte & Clé IA</h2>
+            <p id="profile-info" style="font-size:0.88rem;color:var(--muted);margin-bottom:14px;"></p>
+            <label class="field-label">Clé API Gemini personnelle (optionnelle si le serveur en a déjà une)</label>
+            <input type="password" id="profile-api-key" class="input" placeholder="AIza..." />
+            <button class="btn btn-sm" onclick="saveApiKeyFromProfile()" style="margin-bottom:18px;">Enregistrer la clé IA</button>
+            <hr style="border-color:var(--border);margin-bottom:16px;" />
+            <button class="btn btn-danger" style="width:100%;" onclick="logout()">🚪 Se déconnecter de Pronote</button>
+          </div>
+        </section>
+      </main>
     </div>
-
-    <!-- ===== TAB 1: WEEKLY TIMETABLE ===== -->
-    <section id="sec-edt" class="tab-section active">
-      <div class="card">
-        <div class="edt-toolbar">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="btn btn-sm btn-ghost active-pill" id="btn-week-0" onclick="selectWeek(0)">📅 Cette semaine</button>
-            <button class="btn btn-sm btn-ghost" id="btn-week-1" onclick="selectWeek(1)">➡️ Semaine prochaine</button>
-            <span id="week-range-label" style="font-size:0.86rem;color:var(--muted);font-weight:600;"></span>
-          </div>
-          <div class="edt-legend">
-            <span><i class="legend-dot" style="background:#ef4444;"></i>Évaluation / Contrôle / CCF</span>
-            <span><i class="legend-dot" style="background:#6366f1;"></i>Cours normal</span>
-            <span><i class="legend-dot" style="background:#64748b;"></i>Cours annulé</span>
-          </div>
-        </div>
-        <div class="week-grid" id="week-grid"></div>
-      </div>
-    </section>
-
-    <!-- ===== TAB 2: GRADES & PROGRESSION CHARTS ===== -->
-    <section id="sec-notes" class="tab-section">
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-label">Moyenne Générale (<span id="kpi-period">Trimestre</span>)</div>
-          <div class="kpi-val" id="kpi-avg" style="color:#818cf8;">—</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Meilleure matière</div>
-          <div class="kpi-val" id="kpi-best" style="color:#10b981;font-size:1.25rem;">—</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Matière à prioriser</div>
-          <div class="kpi-val" id="kpi-worst" style="color:#ef4444;font-size:1.25rem;">—</div>
-        </div>
-      </div>
-
-      <div class="two-col" style="margin-bottom:16px;">
-        <div class="card">
-          <h2>
-            <span>📈 Courbe de Progression (/20)</span>
-            <select id="subject-filter" class="input" style="width:auto;margin:0;padding:5px 10px;font-size:0.82rem;" onchange="renderProgressionChart()">
-              <option value="ALL">Toutes les matières</option>
-            </select>
-          </h2>
-          <div class="chart-box"><canvas id="chart-progression"></canvas></div>
-        </div>
-
-        <div class="card">
-          <h2>📊 Moyennes par Matière (Toi vs Classe)</h2>
-          <div class="chart-box"><canvas id="chart-averages"></canvas></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>🧾 Historique détaillé des Notes</h2>
-        <div id="grades-detail-list"></div>
-      </div>
-    </section>
-
-    <!-- ===== TAB 3: TO-DO & DEVOIRS ===== -->
-    <section id="sec-todo" class="tab-section">
-      <div class="two-col">
-        <div class="card">
-          <h2>
-            <span>📋 Super To-Do Coach</span>
-            <span id="coach-progress" style="font-size:0.82rem;color:var(--muted)"></span>
-          </h2>
-          <div style="display:flex;gap:6px;margin-bottom:12px;">
-            <input type="text" id="new-task-subject" class="input" style="margin:0;width:32%;padding:8px 10px;font-size:14px;" placeholder="Matière" />
-            <input type="text" id="new-task-title" class="input" style="margin:0;flex:1;padding:8px 10px;font-size:14px;" placeholder="Ajouter une révision..." onkeydown="if(event.key==='Enter') addCustomTask()" />
-            <button class="btn btn-sm" onclick="addCustomTask()">+</button>
-          </div>
-          <div id="coach-list"></div>
-        </div>
-
-        <div class="card">
-          <h2>📚 Devoirs & Contrôles Pronote</h2>
-          <div id="hw-list"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== TAB 4: AI COACH CHAT ===== -->
-    <section id="sec-chat" class="tab-section">
-      <div class="card chat-card">
-        <h2>
-          <span>✨ Ton Prof Particulier Gemini</span>
-          <button class="btn btn-sm btn-ghost" onclick="resetChat()">Nouveau chat</button>
-        </h2>
-
-        <div id="key-banner" style="display:none;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:12px;padding:10px;margin-bottom:10px;font-size:0.82rem;">
-          🔑 Ajoute une clé gratuite <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fcd34d">Google AI Studio</a> dans <strong>⚙️ Compte</strong> pour activer le chat !
-        </div>
-
-        <div class="chat-messages" id="chat-messages">
-          <div class="msg bot">Salut ! 👋 Je vois ton emploi du temps, tes évaluations en rouge et toutes tes notes. Comment puis-je t'aider aujourd'hui ?</div>
-        </div>
-
-        <div class="quick-chips">
-          <button class="chip" onclick="quickAsk('Analyse ma progression de notes et dis-moi quelles matières bosser en priorité')">📈 Analyser mes notes</button>
-          <button class="chip" onclick="quickAsk('Quelles sont mes prochaines évaluations et comment les réviser jour par jour ?')">🚨 Plan évaluations</button>
-          <button class="chip" onclick="quickAsk('Fais-moi un quiz rapide sur mon prochain contrôle')">🧠 Quiz rapide</button>
-        </div>
-
-        <div class="chat-input-row">
-          <input type="text" id="chat-input" placeholder="Pose ta question à ton Coach..." onkeydown="if(event.key==='Enter') sendMessage()" />
-          <button class="btn" onclick="sendMessage()">➤</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== TAB 5: PROFILE ===== -->
-    <section id="sec-profile" class="tab-section">
-      <div class="card" style="max-width:520px;">
-        <h2>⚙️ Mon Compte & Clé IA</h2>
-        <p id="profile-info" style="font-size:0.88rem;color:var(--muted);margin-bottom:14px;"></p>
-        <label class="field-label">Clé API Gemini personnelle (optionnelle si le serveur en a déjà une)</label>
-        <input type="password" id="profile-api-key" class="input" placeholder="AIza..." />
-        <button class="btn btn-sm" onclick="saveApiKeyFromProfile()" style="margin-bottom:18px;">Enregistrer la clé IA</button>
-        <hr style="border-color:var(--border);margin-bottom:16px;" />
-        <button class="btn btn-danger" style="width:100%;" onclick="logout()">🚪 Se déconnecter de Pronote</button>
-      </div>
-    </section>
   </div>
 
   <!-- Mobile Bottom Navigation -->
@@ -559,7 +783,6 @@
     function getApiBase() {
       const saved = (localStorage.getItem('pc_server_url') || '').trim().replace(/\/$/, '');
       if (saved) return saved;
-      // When served from Vercel / Netlify / GitHub Pages / Capacitor Android, talk to the Render API
       const host = window.location.hostname;
       if (
         host.endsWith('vercel.app') ||
@@ -572,8 +795,8 @@
       }
       return '';
     }
-    // Silent background wake-up ping as soon as the instant CDN page opens
     fetch(getApiBase() + '/health').catch(() => {});
+
     function getToken() { return localStorage.getItem('pc_token') || ''; }
     function saveServerUrl() {
       localStorage.setItem('pc_server_url', document.getElementById('server-url-input').value.trim().replace(/\/$/, ''));
@@ -689,15 +912,10 @@
       document.getElementById('app-screen').style.display = 'block';
       document.getElementById('mobile-nav').style.display = window.innerWidth <= 900 ? 'grid' : 'none';
 
-      // Instant render from local cache (0.1s load even on slow 4G or waking server!)
       const cached = localStorage.getItem('pc_cached_data');
       if (cached) {
-        try {
-          appData = JSON.parse(cached);
-          renderAll(appData);
-        } catch (e) {}
+        try { appData = JSON.parse(cached); renderAll(appData); } catch (e) {}
       }
-
       try {
         const res = await apiFetch('/api/me');
         appData = await res.json();
@@ -710,40 +928,39 @@
     });
 
     async function syncPronote() {
-      const btn = document.getElementById('sync-btn');
-      btn.textContent = '⏳ Synchro...';
-      btn.disabled = true;
+      const b1 = document.getElementById('sync-btn');
+      const b2 = document.getElementById('sync-btn-pc');
+      if (b1) { b1.textContent = '⏳...'; b1.disabled = true; }
+      if (b2) { b2.textContent = '⏳ Synchro...'; b2.disabled = true; }
       try {
         const res = await apiFetch('/api/sync', { method: 'POST' });
         const json = await res.json();
-        if (json.ok) { appData = json.data; renderAll(appData); }
+        if (json.ok) {
+          appData = json.data;
+          localStorage.setItem('pc_cached_data', JSON.stringify(appData));
+          renderAll(appData);
+        }
       } finally {
-        btn.textContent = '🔄 Synchro';
-        btn.disabled = false;
+        if (b1) { b1.textContent = '🔄 Synchro'; b1.disabled = false; }
+        if (b2) { b2.textContent = '🔄 Synchroniser Pronote'; b2.disabled = false; }
       }
     }
 
-    /* ---------- WEEKLY TIMETABLE RENDERER ---------- */
+    /* ---------- WEEKLY TIMETABLE ---------- */
     function selectWeek(offset) {
       selectedWeekOffset = offset;
       document.getElementById('btn-week-0').classList.toggle('active-pill', offset === 0);
       document.getElementById('btn-week-1').classList.toggle('active-pill', offset === 1);
       if (appData) renderWeeklyTimetable(appData.lessons || []);
     }
-
     function toIsoDate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
-
     function renderWeeklyTimetable(lessons) {
       const today = new Date();
-      const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // 1=Mon..7=Sun
+      const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
       const monday = new Date(today);
       monday.setDate(today.getDate() - (dayOfWeek - 1) + selectedWeekOffset * 7);
-
       const friday = new Date(monday);
       friday.setDate(monday.getDate() + 4);
       const fmtShort = d => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -762,7 +979,6 @@
 
         html += `<div class="day-col ${isToday ? 'today-col' : ''}">
           <div class="day-header">${dayNames[i]} ${isToday ? '• Auj.' : ''}<span>${fmtShort(d)}</span></div>`;
-
         if (!dayLessons.length) {
           html += `<div style="color:var(--muted);font-size:0.78rem;text-align:center;margin-top:24px;">Aucun cours</div>`;
         } else {
@@ -771,8 +987,8 @@
             const cls = l.canceled ? 'canceled' : (isEval ? 'eval' : '');
             const borderStyle = (!l.canceled && !isEval && l.background_color) ? `style="border-left-color:${l.background_color};"` : '';
             const badgeText = l.canceled
-              ? '<span style="color:#94a3b8;font-size:0.68rem;">❌ ANNULÉ</span>'
-              : (isEval ? `<span class="eval-pill">🚨 ${l.status && l.status.toUpperCase().includes('CCF') ? 'CCF BAC' : 'ÉVALUATION'}</span>` : (l.status ? `<span style="color:#fcd34d;font-size:0.68rem;">⭐ ${l.status}</span>` : ''));
+              ? '<span style="color:#64748b;font-size:0.68rem;font-weight:700;">❌ ANNULÉ</span>'
+              : (isEval ? `<span class="eval-pill">🚨 ${l.status && l.status.toUpperCase().includes('CCF') ? 'CCF BAC' : 'ÉVALUATION'}</span>` : (l.status ? `<span style="color:#d97706;font-size:0.68rem;font-weight:700;">⭐ ${l.status}</span>` : ''));
 
             html += `<div class="slot ${cls}" ${borderStyle}>
               <div class="slot-time"><span>${l.start.slice(11,16)} – ${l.end.slice(11,16)}</span><span>${l.classroom ? 'S. ' + l.classroom : ''}</span></div>
@@ -787,27 +1003,18 @@
       document.getElementById('week-grid').innerHTML = html;
     }
 
-    /* ---------- GRADES & CHARTS RENDERER ---------- */
-    function parseNum(v) {
-      if (v === null || v === undefined) return NaN;
-      return parseFloat(String(v).replace(',', '.'));
-    }
-
+    /* ---------- GRADES & CHARTS (LIGHT PALETTE) ---------- */
+    function parseNum(v) { return (v === null || v === undefined) ? NaN : parseFloat(String(v).replace(',', '.')); }
     function normalizeOutOf20(grade, outOf) {
-      const g = parseNum(grade);
-      const o = parseNum(outOf);
+      const g = parseNum(grade), o = parseNum(outOf);
       if (isNaN(g) || isNaN(o) || o <= 0) return null;
       return Math.round((g / o) * 20 * 100) / 100;
     }
-
     function renderGradesSection(data) {
       document.getElementById('kpi-period').textContent = data.period_name || 'Trimestre';
       const avgs = Object.entries(data.averages || {}).map(([s, v]) => ({
-        subject: s,
-        student: parseNum(v.student),
-        classAvg: parseNum(v.class_average),
-        rawStudent: v.student,
-        rawClass: v.class_average
+        subject: s, student: parseNum(v.student), classAvg: parseNum(v.class_average),
+        rawStudent: v.student, rawClass: v.class_average
       })).filter(x => !isNaN(x.student));
 
       if (avgs.length) {
@@ -817,11 +1024,8 @@
         document.getElementById('kpi-best').textContent = `${sorted[0].subject.split('>')[0].trim()} (${sorted[0].rawStudent}/20)`;
         const last = sorted[sorted.length - 1];
         document.getElementById('kpi-worst').textContent = `${last.subject.split('>')[0].trim()} (${last.rawStudent}/20)`;
-      } else {
-        document.getElementById('kpi-avg').textContent = '—';
       }
 
-      // Populate subject filter
       const sel = document.getElementById('subject-filter');
       const prevVal = sel.value || 'ALL';
       const subjects = [...new Set((data.grades || []).map(g => g.subject))];
@@ -829,17 +1033,13 @@
         subjects.map(s => `<option value="${s}">${s.split('>')[0].trim()}</option>`).join('');
       sel.value = subjects.includes(prevVal) ? prevVal : 'ALL';
 
-      // Detailed list
-      const listEl = document.getElementById('grades-detail-list');
       const grades = data.grades || [];
-      listEl.innerHTML = grades.length ? grades.map(g => {
+      document.getElementById('grades-detail-list').innerHTML = grades.length ? grades.map(g => {
         const g20 = normalizeOutOf20(g.grade, g.out_of);
         const c20 = normalizeOutOf20(g.average, g.out_of);
         const diff = (g20 !== null && c20 !== null) ? (g20 - c20).toFixed(1) : null;
-        const diffHtml = diff !== null
-          ? `<span style="font-size:0.75rem;color:${diff >= 0 ? '#10b981' : '#ef4444'}">(${diff >= 0 ? '+' : ''}${diff} vs classe)</span>`
-          : '';
-        const color = g20 === null ? '#94a3b8' : (g20 >= 14 ? '#10b981' : (g20 >= 10.5 ? '#f59e0b' : '#ef4444'));
+        const diffHtml = diff !== null ? `<span style="font-size:0.75rem;font-weight:600;color:${diff >= 0 ? '#059669' : '#dc2626'}">(${diff >= 0 ? '+' : ''}${diff} vs classe)</span>` : '';
+        const color = g20 === null ? '#64748b' : (g20 >= 14 ? '#059669' : (g20 >= 10.5 ? '#d97706' : '#dc2626'));
         return `<div class="grade-row">
           <div>
             <strong>${g.subject.split('>')[0].trim()}</strong> ${g.comment ? '— ' + g.comment : ''}
@@ -877,32 +1077,25 @@
             {
               label: 'Tes notes (/20)',
               data: points.map(p => p.student20),
-              borderColor: '#818cf8',
-              backgroundColor: 'rgba(129, 140, 248, 0.18)',
-              fill: true,
-              tension: 0.32,
-              pointRadius: 5,
-              pointBackgroundColor: '#a5b4fc',
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.12)',
+              fill: true, tension: 0.32, pointRadius: 5, pointBackgroundColor: '#4f46e5',
             },
             {
               label: 'Moyenne classe (/20)',
               data: points.map(p => p.class20),
-              borderColor: '#64748b',
-              borderDash: [5, 5],
-              tension: 0.3,
-              pointRadius: 3,
-              fill: false,
+              borderColor: '#94a3b8',
+              borderDash: [5, 5], tension: 0.3, pointRadius: 3, fill: false,
             }
           ]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false,
           scales: {
-            y: { min: 0, max: 20, grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: 40 } }
+            y: { min: 0, max: 20, grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#475569' } },
+            x: { grid: { display: false }, ticks: { color: '#475569', maxRotation: 40 } }
           },
-          plugins: { legend: { labels: { color: '#e2e8f0' } } }
+          plugins: { legend: { labels: { color: '#0f172a' } } }
         }
       });
     }
@@ -910,9 +1103,7 @@
     function renderAveragesChart() {
       if (!appData) return;
       const entries = Object.entries(appData.averages || []).map(([s, v]) => ({
-        name: s.split('>')[0].trim(),
-        student: parseNum(v.student),
-        classAvg: parseNum(v.class_average),
+        name: s.split('>')[0].trim(), student: parseNum(v.student), classAvg: parseNum(v.class_average),
       })).filter(x => !isNaN(x.student));
 
       const ctx = document.getElementById('chart-averages').getContext('2d');
@@ -931,19 +1122,18 @@
             {
               label: 'Classe',
               data: entries.map(e => e.classAvg),
-              backgroundColor: 'rgba(148, 163, 184, 0.35)',
+              backgroundColor: '#cbd5e1',
               borderRadius: 6,
             }
           ]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false,
           scales: {
-            y: { min: 0, max: 20, grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+            y: { min: 0, max: 20, grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#475569' } },
+            x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 11 } } }
           },
-          plugins: { legend: { labels: { color: '#e2e8f0' } } }
+          plugins: { legend: { labels: { color: '#0f172a' } } }
         }
       });
     }
@@ -972,6 +1162,7 @@
       if (!confirm('Te déconnecter de ton compte Pronote ?')) return;
       try { await apiFetch('/api/logout', { method: 'POST' }); } catch (e) {}
       localStorage.removeItem('pc_token');
+      localStorage.removeItem('pc_cached_data');
       showLoginScreen();
     }
     function appendMsg(role, text) {
@@ -1007,9 +1198,13 @@
     }
 
     function renderAll(data) {
-      document.getElementById('student-name').textContent = `🎓 ${data.student.name} (${data.student.class_name})`;
-      document.getElementById('sync-status').textContent = `${data.student.establishment} • Synchro ${data.student.synced_at.replace('T', ' ')}`;
-      document.getElementById('profile-info').textContent = `Connecté : ${data.student.name} (${data.student.class_name}) — ${data.student.establishment}`;
+      const label = `${data.student.name} (${data.student.class_name})`;
+      document.getElementById('student-name').textContent = `🎓 ${label}`;
+      document.getElementById('side-student-name').textContent = label;
+      const syncTxt = `Synchro ${data.student.synced_at.replace('T', ' ')}`;
+      document.getElementById('sync-status').textContent = syncTxt;
+      document.getElementById('side-sync-status').textContent = syncTxt;
+      document.getElementById('profile-info').textContent = `Connecté : ${label} — ${data.student.establishment}`;
       document.getElementById('key-banner').style.display = data.has_gemini_key ? 'none' : 'block';
 
       renderWeeklyTimetable(data.lessons || []);
