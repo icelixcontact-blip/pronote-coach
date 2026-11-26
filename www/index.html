@@ -184,23 +184,31 @@
     }
     .lp-sub-note { font-size: 0.8rem; color: #71717a; font-weight: 500; }
 
-    /* Pure SVG Floating Subject Icons (ZERO text, ZERO cheap emoji) */
+    /* Pure SVG Floating Subject Icons — Interactive on Touch & Hover */
     .f-orb {
       position: absolute;
-      z-index: 2;
+      z-index: 4;
       width: 60px; height: 60px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(228, 228, 231, 0.9);
+      border: 1px solid rgba(228, 228, 231, 0.95);
       box-shadow: 0 18px 40px -12px rgba(9, 9, 11, 0.14);
       display: grid;
       place-items: center;
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
       user-select: none;
-      animation: driftA 8s ease-in-out infinite;
+      touch-action: none;
+      will-change: transform;
+      transition: box-shadow 0.25s ease, border-color 0.25s ease;
     }
-    .f-orb svg { width: 26px; height: 26px; stroke-width: 2; }
+    .f-orb:hover, .f-orb.popped {
+      border-color: currentColor;
+      box-shadow: 0 20px 44px -10px rgba(79, 70, 229, 0.28);
+    }
+    .f-orb svg { width: 26px; height: 26px; stroke-width: 2; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .f-orb.popped svg { transform: scale(1.28) rotate(18deg); }
     @media (max-width: 900px) {
       .lp-hero { padding: 52px 16px 40px; }
       .f-orb { width: 44px; height: 44px; border-radius: 13px; }
@@ -1427,6 +1435,91 @@
     }
 
     initApp();
+
+    /* ---------- INTERACTIVE SPRING PHYSICS FOR FLOATING HERO ICONS (MOUSE + TOUCH) ---------- */
+    (function initFloatingOrbs() {
+      const hero = document.querySelector('.lp-hero');
+      const orbs = Array.from(document.querySelectorAll('.f-orb'));
+      if (!hero || !orbs.length) return;
+
+      const states = orbs.map((el, i) => ({
+        el,
+        x: 0, y: 0, vx: 0, vy: 0, rot: 0, vrot: 0, scale: 1,
+        phase: i * 1.15,
+        speed: 0.0012 + (i % 3) * 0.00025,
+        amp: 10 + (i % 2) * 5,
+      }));
+
+      let pointer = { x: -9999, y: -9999, active: false };
+
+      function updatePointer(clientX, clientY) {
+        pointer.x = clientX;
+        pointer.y = clientY;
+        pointer.active = true;
+      }
+
+      hero.addEventListener('pointermove', (e) => updatePointer(e.clientX, e.clientY));
+      hero.addEventListener('pointerleave', () => { pointer.active = false; });
+      hero.addEventListener('touchmove', (e) => {
+        if (e.touches[0]) updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      hero.addEventListener('touchend', () => { pointer.active = false; });
+
+      // Direct tap / click bounce & spin on any orb!
+      states.forEach((st) => {
+        st.el.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          const angle = Math.random() * Math.PI * 2;
+          st.vx += Math.cos(angle) * 14;
+          st.vy += Math.sin(angle) * 14 - 6;
+          st.vrot += (Math.random() > 0.5 ? 1 : -1) * 26;
+          st.el.classList.add('popped');
+          setTimeout(() => st.el.classList.remove('popped'), 420);
+        });
+      });
+
+      function tick(now) {
+        for (const st of states) {
+          // Gentle ambient float target
+          const targetY = Math.sin(now * st.speed + st.phase) * st.amp;
+          const targetX = Math.cos(now * st.speed * 0.7 + st.phase) * (st.amp * 0.45);
+
+          // Magnetic repulsion from finger / mouse cursor
+          if (pointer.active) {
+            const rect = st.el.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = cx - pointer.x;
+            const dy = cy - pointer.y;
+            const dist = Math.hypot(dx, dy);
+            const radius = 155;
+            if (dist < radius && dist > 0.1) {
+              const force = ((radius - dist) / radius) * 3.8;
+              st.vx += (dx / dist) * force;
+              st.vy += (dy / dist) * force;
+              st.vrot += (dx / dist) * force * 1.4;
+            }
+          }
+
+          // Smooth spring return + damping
+          st.vx += (targetX - st.x) * 0.045;
+          st.vy += (targetY - st.y) * 0.045;
+          st.vrot += (0 - st.rot) * 0.06;
+
+          st.vx *= 0.84;
+          st.vy *= 0.84;
+          st.vrot *= 0.85;
+
+          st.x += st.vx;
+          st.y += st.vy;
+          st.rot += st.vrot;
+
+          st.el.style.transform = `translate3d(${st.x.toFixed(1)}px, ${st.y.toFixed(1)}px, 0) rotate(${st.rot.toFixed(1)}deg)`;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
   </script>
 </body>
 </html>
