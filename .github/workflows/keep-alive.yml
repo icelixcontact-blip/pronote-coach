@@ -1,0 +1,14 @@
+name: Keep Render Awake
+
+on:
+  schedule:
+    # Ping every 10 minutes from 06:00 to 23:50 UTC (07:00 to 00:50 Paris)
+    - cron: '*/10 6-23 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Pronote Coach /health
+        run: curl -fsS --max-time 60 https://pronote-coach.onrender.com/health

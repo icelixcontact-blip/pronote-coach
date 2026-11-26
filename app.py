@@ -386,6 +386,12 @@ class ApiKeyReq(BaseModel):
     api_key: str
 
 
+# ---------- Health Check (for Keep-Alive ping) ----------
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 # ---------- Auth Routes (Multi-User) ----------
 @app.post("/api/auth/qr-json")
 def auth_qr_json(req: QrJsonLoginReq):

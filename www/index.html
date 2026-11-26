@@ -670,9 +670,20 @@
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
       document.getElementById('mobile-nav').style.display = window.innerWidth <= 900 ? 'grid' : 'none';
+
+      // Instant render from local cache (0.1s load even on slow 4G or waking server!)
+      const cached = localStorage.getItem('pc_cached_data');
+      if (cached) {
+        try {
+          appData = JSON.parse(cached);
+          renderAll(appData);
+        } catch (e) {}
+      }
+
       try {
         const res = await apiFetch('/api/me');
         appData = await res.json();
+        localStorage.setItem('pc_cached_data', JSON.stringify(appData));
         renderAll(appData);
       } catch (e) {}
     }
