@@ -926,6 +926,8 @@
     fetch(getApiBase() + '/health').catch(() => {});
 
     function getToken() { return localStorage.getItem('pc_token') || ''; }
+    function getVault() { return localStorage.getItem('pc_vault') || ''; }
+    function saveVault(v) { if (v) localStorage.setItem('pc_vault', v); }
 
     function showLoginStatus(msg, type) {
       const el = document.getElementById('login-status');
@@ -1055,6 +1057,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Erreur connexion');
         localStorage.setItem('pc_token', data.token);
+        if (data.vault) saveVault(data.vault);
         closeAuthModal();
         initApp();
       } catch (e) {
@@ -1077,12 +1080,13 @@
         fd.append('file', fileInput.files[0]);
         const res = await fetch(getApiBase() + '/api/auth/qr-image', {
           method: 'POST',
-          headers: { 'X-Session-Token': getToken() },
+          headers: { 'X-Session-Token': getToken(), 'X-Pronote-Vault': getVault() },
           body: fd
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Erreur connexion');
         localStorage.setItem('pc_token', data.token);
+        if (data.vault) saveVault(data.vault);
         closeAuthModal();
         initApp();
       } catch (e) {
@@ -1091,10 +1095,14 @@
     }
 
     async function apiFetch(path, opts = {}) {
-      opts.headers = Object.assign({}, opts.headers || {}, { 'X-Session-Token': getToken() });
+      opts.headers = Object.assign({}, opts.headers || {}, {
+        'X-Session-Token': getToken(),
+        'X-Pronote-Vault': getVault()
+      });
       const res = await fetch(getApiBase() + path, opts);
       if (res.status === 401) {
         localStorage.removeItem('pc_token');
+        localStorage.removeItem('pc_vault');
         showLoginScreen();
         throw new Error('Session expirée');
       }
@@ -1129,6 +1137,7 @@
       try {
         const res = await apiFetch('/api/me');
         appData = await res.json();
+        if (appData.vault) saveVault(appData.vault);
         localStorage.setItem('pc_cached_data', JSON.stringify(appData));
         renderAll(appData);
       } catch (e) {}
@@ -1151,6 +1160,7 @@
         const json = await res.json();
         if (json.ok) {
           appData = json.data;
+          if (appData.vault) saveVault(appData.vault);
           localStorage.setItem('pc_cached_data', JSON.stringify(appData));
           renderAll(appData);
         }
@@ -1353,6 +1363,7 @@
       if (!confirm('Te déconnecter ?')) return;
       try { await apiFetch('/api/logout', { method: 'POST' }); } catch (e) {}
       localStorage.removeItem('pc_token');
+      localStorage.removeItem('pc_vault');
       localStorage.removeItem('pc_cached_data');
       showLoginScreen();
     }

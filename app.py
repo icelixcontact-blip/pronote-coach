@@ -1,3 +1,4 @@
+import base64
 import datetime
 import hashlib
 import json
@@ -10,6 +11,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+from Crypto.Cipher import AES
 import truststore
 truststore.inject_into_ssl()
 
@@ -57,20 +59,60 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def _session_dir(token: str) -> Path:
-    if not token or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", token):
-        raise HTTPException(status_code=401, detail="Session invalide ou expirée. Reconnecte-toi avec ton QR Code Pronote.")
-    sdir = SESSIONS_DIR / token
-    if not sdir.exists():
-        raise HTTPException(status_code=401, detail="Session introuvable. Reconnecte-toi avec ton QR Code Pronote.")
-    return sdir
-
-
 import time
 
 _CLIENT_CACHE: dict[str, tuple[pronotepy.Client, float]] = {}
 CLIENT_TTL_SECONDS = 300
+
+
+def _vault_key() -> bytes:
+    secret = os.environ.get("VAULT_SECRET") or os.environ.get("GEMINI_API_KEY") or "pronote-coach-default-vault-key-2026"
+    return hashlib.sha256(secret.encode("utf-8")).digest()
+
+
+def _encrypt_vault(payload: dict) -> str:
+    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    cipher = AES.new(_vault_key(), AES.MODE_GCM)
+    ct, tag = cipher.encrypt_and_digest(raw)
+    return base64.urlsafe_b64encode(cipher.nonce + tag + ct).decode("ascii")
+
+
+def _decrypt_vault(vault_str: str) -> Optional[dict]:
+    if not vault_str:
+        return None
+    try:
+        blob = base64.urlsafe_b64decode(vault_str.encode("ascii"))
+        nonce, tag, ct = blob[:16], blob[16:32], blob[32:]
+        cipher = AES.new(_vault_key(), AES.MODE_GCM, nonce=nonce)
+        raw = cipher.decrypt_and_verify(ct, tag)
+        return json.loads(raw.decode("utf-8"))
+    except Exception:
+        return None
+
+
+def _export_session_vault(sdir: Path) -> str:
+    creds_path = sdir / "credentials.json"
+    if not creds_path.exists():
+        return ""
+    creds = json.loads(creds_path.read_text(encoding="utf-8"))
+    return _encrypt_vault({"creds": creds})
+
+
+def _session_dir(token: str, vault: str = "") -> Path:
+    if not token or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", token):
+        raise HTTPException(status_code=401, detail="Session invalide ou expirée. Reconnecte-toi avec ton QR Code Pronote.")
+    sdir = SESSIONS_DIR / token
+    if not sdir.exists() or not (sdir / "pronote_data.json").exists():
+        # Auto-restore seamlessly after a Render redeploy/restart using the encrypted client vault!
+        restored = _decrypt_vault(vault)
+        if restored and restored.get("creds"):
+            sdir.mkdir(parents=True, exist_ok=True)
+            (sdir / "credentials.json").write_text(json.dumps(restored["creds"], indent=2, ensure_ascii=False), encoding="utf-8")
+            client = _get_session_client(sdir)
+            _sync_session_data(sdir, client)
+            return sdir
+        raise HTTPException(status_code=401, detail="Session introuvable. Reconnecte-toi avec ton QR Code Pronote.")
+    return sdir
 
 
 def _save_session_creds(sdir: Path, client: pronotepy.Client) -> None:
@@ -545,7 +587,7 @@ def auth_qr_json(req: QrJsonLoginReq, x_session_token: str = Header(default=""))
         sdir.mkdir(parents=True, exist_ok=True)
         _save_session_creds(sdir, client)
         data = _sync_session_data(sdir, client)
-        return {"ok": True, "token": token, "student": data["student"], "pronote_linked": True}
+        return {"ok": True, "token": token, "student": data["student"], "pronote_linked": True, "vault": _export_session_vault(sdir)}
     except HTTPException:
         raise
     except Exception as e:
@@ -578,7 +620,7 @@ async def auth_qr_image(pin: str = Form(...), file: UploadFile = File(...), x_se
         sdir.mkdir(parents=True, exist_ok=True)
         _save_session_creds(sdir, client)
         data = _sync_session_data(sdir, client)
-        return {"ok": True, "token": token, "student": data["student"], "pronote_linked": True}
+        return {"ok": True, "token": token, "student": data["student"], "pronote_linked": True, "vault": _export_session_vault(sdir)}
     except HTTPException:
         raise
     except Exception as e:
@@ -607,19 +649,20 @@ def logout(x_session_token: str = Header(default="")):
 
 # ---------- Student Data & Sync Routes ----------
 @app.get("/api/me")
-def get_me(x_session_token: str = Header(default="")):
-    sdir = _session_dir(x_session_token)
+def get_me(x_session_token: str = Header(default=""), x_pronote_vault: str = Header(default="")):
+    sdir = _session_dir(x_session_token, x_pronote_vault)
     data = json.loads((sdir / "pronote_data.json").read_text(encoding="utf-8"))
     tasks = json.loads((sdir / "coach_tasks.json").read_text(encoding="utf-8")) if (sdir / "coach_tasks.json").exists() else []
     data["coach_tasks"] = tasks
     data["has_gemini_key"] = bool(_get_gemini_key(sdir))
     data["pronote_linked"] = (sdir / "credentials.json").exists()
+    data["vault"] = _export_session_vault(sdir)
     return data
 
 
 @app.post("/api/sync")
-def sync_me(x_session_token: str = Header(default="")):
-    sdir = _session_dir(x_session_token)
+def sync_me(x_session_token: str = Header(default=""), x_pronote_vault: str = Header(default="")):
+    sdir = _session_dir(x_session_token, x_pronote_vault)
     try:
         client = _get_session_client(sdir)
         data = _sync_session_data(sdir, client)
@@ -631,12 +674,14 @@ def sync_me(x_session_token: str = Header(default="")):
     tasks = json.loads((sdir / "coach_tasks.json").read_text(encoding="utf-8"))
     data["coach_tasks"] = tasks
     data["has_gemini_key"] = bool(_get_gemini_key(sdir))
+    data["pronote_linked"] = True
+    data["vault"] = _export_session_vault(sdir)
     return {"ok": True, "data": data}
 
 
 @app.post("/api/tasks/toggle")
-def toggle_task(req: ToggleReq, x_session_token: str = Header(default="")):
-    sdir = _session_dir(x_session_token)
+def toggle_task(req: ToggleReq, x_session_token: str = Header(default=""), x_pronote_vault: str = Header(default="")):
+    sdir = _session_dir(x_session_token, x_pronote_vault)
     if req.kind == "coach":
         p = sdir / "coach_tasks.json"
         tasks = json.loads(p.read_text(encoding="utf-8"))
@@ -656,8 +701,8 @@ def toggle_task(req: ToggleReq, x_session_token: str = Header(default="")):
 
 
 @app.post("/api/tasks/add")
-def add_task(req: AddTaskReq, x_session_token: str = Header(default="")):
-    sdir = _session_dir(x_session_token)
+def add_task(req: AddTaskReq, x_session_token: str = Header(default=""), x_pronote_vault: str = Header(default="")):
+    sdir = _session_dir(x_session_token, x_pronote_vault)
     p = sdir / "coach_tasks.json"
     tasks = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
     tasks.insert(0, {
@@ -676,15 +721,15 @@ def add_task(req: AddTaskReq, x_session_token: str = Header(default="")):
 
 
 @app.post("/api/settings/api-key")
-def save_api_key(req: ApiKeyReq, x_session_token: str = Header(default="")):
-    sdir = _session_dir(x_session_token)
+def save_api_key(req: ApiKeyReq, x_session_token: str = Header(default=""), x_pronote_vault: str = Header(default="")):
+    sdir = _session_dir(x_session_token, x_pronote_vault)
     (sdir / "gemini_config.json").write_text(json.dumps({"api_key": req.api_key.strip()}), encoding="utf-8")
     return {"ok": True, "has_gemini_key": bool(req.api_key.strip())}
 
 
 @app.post("/api/chat")
-def chat_with_coach(req: ChatReq, x_session_token: str = Header(default="")):
-    sdir = _session_dir(x_session_token)
+def chat_with_coach(req: ChatReq, x_session_token: str = Header(default=""), x_pronote_vault: str = Header(default="")):
+    sdir = _session_dir(x_session_token, x_pronote_vault)
     api_key = _get_gemini_key(sdir)
     if not api_key:
         raise HTTPException(status_code=400, detail="Ajoute ta clé API Gemini gratuite (Google AI Studio) pour activer le chat.")
